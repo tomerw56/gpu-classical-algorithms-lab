@@ -1,0 +1,12 @@
+build*/
+out/
+*.user
+*.suo
+*.vcxproj.user
+.cache/
+.vscode/
+.idea/
+results/*.jsonl
+results/*.png
+results/*.md
+!results/.gitkeep
