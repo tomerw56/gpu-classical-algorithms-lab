@@ -2,20 +2,35 @@ cmake_minimum_required(VERSION 3.24)
 
 project(gpu_classical_algorithms_lab
     VERSION 0.1.0
-    DESCRIPTION "Classical algorithms CPU/GPU benchmark lab"
-    LANGUAGES CXX)
+    LANGUAGES CXX
+)
 
-option(ENABLE_CUDA "Build CUDA GPU benchmarks when a CUDA compiler is available" OFF)
-option(REQUIRE_CUDA "Fail configure if ENABLE_CUDA=ON but CUDA is missing" ON)
+# ============================================================
+# Options
+# ============================================================
 
-option(BUILD_TESTS "Build smoke tests" ON)
+option(ENABLE_CUDA "Build CUDA GPU benchmarks" ON)
+option(BUILD_TESTS "Build tests" ON)
 option(ENABLE_WARNINGS_AS_ERRORS "Treat warnings as errors" OFF)
+
+# If ON, requesting CUDA but failing to find it is a hard error.
+# For this project, that is usually what we want while developing.
+option(REQUIRE_CUDA "Fail configure if ENABLE_CUDA=ON but CUDA is unavailable" ON)
+
+# ============================================================
+# C++ standard
+# ============================================================
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# ============================================================
+# Optional CUDA language enablement
+# ============================================================
+
 include(CheckLanguage)
+
 set(GPUALGOBENCH_HAS_CUDA OFF)
 
 if(ENABLE_CUDA)
@@ -23,93 +38,219 @@ if(ENABLE_CUDA)
 
     if(CMAKE_CUDA_COMPILER)
         enable_language(CUDA)
+
+        set(CMAKE_CUDA_STANDARD 17)
+        set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+        set(CMAKE_CUDA_EXTENSIONS OFF)
+
+        # Important:
+        # This makes CUDAToolkit_ROOT meaningful and gives us CUDA::cudart
+        # and CUDAToolkit_INCLUDE_DIRS.
+        find_package(CUDAToolkit REQUIRED)
+
         set(GPUALGOBENCH_HAS_CUDA ON)
+
         message(STATUS "CUDA compiler found: ${CMAKE_CUDA_COMPILER}")
+        message(STATUS "CUDA compiler version: ${CMAKE_CUDA_COMPILER_VERSION}")
+        message(STATUS "CUDA toolkit include dirs: ${CUDAToolkit_INCLUDE_DIRS}")
+
+        if(DEFINED CMAKE_CUDA_HOST_COMPILER)
+            message(STATUS "CUDA host compiler: ${CMAKE_CUDA_HOST_COMPILER}")
+        endif()
+
+        # If the user did not provide an architecture, choose a reasonable
+        # default for your current RTX 1000 Ada setup.
+        #
+        # You can override this from the command line:
+        #   -DCMAKE_CUDA_ARCHITECTURES=89
+        #
+        # For other GPUs, adjust accordingly.
+        if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
+            set(CMAKE_CUDA_ARCHITECTURES 89)
+            message(STATUS "CMAKE_CUDA_ARCHITECTURES not set; defaulting to 89")
+        endif()
     else()
         if(REQUIRE_CUDA)
             message(FATAL_ERROR
                 "ENABLE_CUDA=ON, but no CUDA compiler was found.\n"
-                "Install the CUDA Toolkit or pass:\n"
-                "  -DCMAKE_CUDA_COMPILER=/path/to/nvcc\n"
-                "On Windows this is often:\n"
-                "  -DCMAKE_CUDA_COMPILER=\"C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.x/bin/nvcc.exe\"")
+                "For Ninja on Windows, run from a vcvars64.bat environment and pass:\n"
+                "  -DCMAKE_CUDA_COMPILER=<CUDA_ROOT>/bin/nvcc.exe\n"
+                "  -DCMAKE_CUDA_HOST_COMPILER=cl.exe\n"
+            )
         else()
-            message(WARNING "ENABLE_CUDA=ON, but no CUDA compiler was found. Building CPU-only.")
+            message(WARNING
+                "ENABLE_CUDA=ON, but no CUDA compiler was found. Building CPU-only."
+            )
         endif()
     endif()
 endif()
 
-add_library(gpu_algobench_common STATIC
-       src/common/benchmark_registry.cpp
+# ============================================================
+# Common library
+# ============================================================
+
+set(GPUALGOBENCH_COMMON_SOURCES
+    src/common/benchmark_registry.cpp
     src/common/benchmark_timer.cpp
     src/common/cli.cpp
     src/common/device_info.cpp
     src/common/json_writer.cpp
     src/common/random_utils.cpp
+
     src/foundation/foundation_smoke_cpu.cpp
+)
+
+if(GPUALGOBENCH_HAS_CUDA)
+    list(APPEND GPUALGOBENCH_COMMON_SOURCES
+        src/foundation/foundation_smoke_gpu.cu
+    )
+endif()
+
+add_library(gpu_algobench_common STATIC
+    ${GPUALGOBENCH_COMMON_SOURCES}
 )
 
 target_include_directories(gpu_algobench_common
     PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/include)
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
 
 if(GPUALGOBENCH_HAS_CUDA)
+    # Important fix:
+    # device_info.cpp is compiled as C++ by cl.exe, but it includes
+    # cuda_runtime.h when CUDA is enabled. Therefore the CUDA include
+    # directory must also be visible to normal C++ sources.
     target_include_directories(gpu_algobench_common
         PRIVATE
-            ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
+            ${CUDAToolkit_INCLUDE_DIRS}
+    )
+
+    target_link_libraries(gpu_algobench_common
+        PRIVATE
+            CUDA::cudart
+    )
+
+    target_compile_definitions(gpu_algobench_common
+        PUBLIC
+            GPUALGOBENCH_ENABLE_CUDA=1
+    )
+
+    set_target_properties(gpu_algobench_common PROPERTIES
+        CUDA_STANDARD 17
+        CUDA_STANDARD_REQUIRED ON
+        CUDA_EXTENSIONS OFF
+        CUDA_RUNTIME_LIBRARY Shared
+    )
+else()
+    target_compile_definitions(gpu_algobench_common
+        PUBLIC
+            GPUALGOBENCH_ENABLE_CUDA=0
     )
 endif()
 
-target_compile_features(gpu_algobench_common PUBLIC cxx_std_17)
+# ============================================================
+# Compiler warnings
+# ============================================================
 
-if(GPUALGOBENCH_HAS_CUDA)
-    target_sources(gpu_algobench_common PRIVATE
-        src/foundation/foundation_smoke_gpu.cu)
-    target_compile_definitions(gpu_algobench_common PUBLIC GPUALGOBENCH_ENABLE_CUDA=1)
-    set_target_properties(gpu_algobench_common PROPERTIES
-        CUDA_STANDARD 17
-        CUDA_STANDARD_REQUIRED ON)
-else()
-    target_compile_definitions(gpu_algobench_common PUBLIC GPUALGOBENCH_ENABLE_CUDA=0)
-endif()
-
-# Important when a target contains both .cpp and .cu files:
-# warning flags such as /W4, /permissive-, -Wall, and -Wextra are C++ compiler
-# options, not CUDA compiler options. Keep them scoped to CXX so they are not
-# passed directly to nvcc.
+# Important:
+# gpu_algobench_common may contain both .cpp and .cu files.
+# Do not pass MSVC flags like /W4 or /permissive- directly to nvcc.
+# Scope warning flags by language.
 if(MSVC)
     target_compile_options(gpu_algobench_common PRIVATE
         $<$<COMPILE_LANGUAGE:CXX>:/W4>
-        $<$<COMPILE_LANGUAGE:CXX>:/permissive->)
+        $<$<COMPILE_LANGUAGE:CXX>:/permissive->
+    )
 
     if(ENABLE_WARNINGS_AS_ERRORS)
         target_compile_options(gpu_algobench_common PRIVATE
-            $<$<COMPILE_LANGUAGE:CXX>:/WX>)
+            $<$<COMPILE_LANGUAGE:CXX>:/WX>
+        )
     endif()
 else()
     target_compile_options(gpu_algobench_common PRIVATE
         $<$<COMPILE_LANGUAGE:CXX>:-Wall>
         $<$<COMPILE_LANGUAGE:CXX>:-Wextra>
-        $<$<COMPILE_LANGUAGE:CXX>:-Wpedantic>)
+        $<$<COMPILE_LANGUAGE:CXX>:-Wpedantic>
+    )
 
     if(ENABLE_WARNINGS_AS_ERRORS)
         target_compile_options(gpu_algobench_common PRIVATE
-            $<$<COMPILE_LANGUAGE:CXX>:-Werror>)
+            $<$<COMPILE_LANGUAGE:CXX>:-Werror>
+        )
     endif()
 endif()
 
-add_executable(gpu_algobench apps/gpu_algobench.cpp)
-target_link_libraries(gpu_algobench PRIVATE gpu_algobench_common)
+# ============================================================
+# Applications
+# ============================================================
 
-add_executable(list_benchmarks apps/list_benchmarks.cpp)
-target_link_libraries(list_benchmarks PRIVATE gpu_algobench_common)
+add_executable(gpu_algobench
+    apps/gpu_algobench.cpp
+)
 
-add_executable(validate_all apps/validate_all.cpp)
-target_link_libraries(validate_all PRIVATE gpu_algobench_common)
+target_link_libraries(gpu_algobench
+    PRIVATE
+        gpu_algobench_common
+)
+
+add_executable(list_benchmarks
+    apps/list_benchmarks.cpp
+)
+
+target_link_libraries(list_benchmarks
+    PRIVATE
+        gpu_algobench_common
+)
+
+add_executable(validate_all
+    apps/validate_all.cpp
+)
+
+target_link_libraries(validate_all
+    PRIVATE
+        gpu_algobench_common
+)
+
+# ============================================================
+# Tests
+# ============================================================
 
 if(BUILD_TESTS)
     enable_testing()
-    add_executable(test_foundation tests/test_foundation.cpp)
-    target_link_libraries(test_foundation PRIVATE gpu_algobench_common)
-    add_test(NAME test_foundation COMMAND test_foundation)
+
+    add_executable(test_foundation
+        tests/test_foundation.cpp
+    )
+
+    target_link_libraries(test_foundation
+        PRIVATE
+            gpu_algobench_common
+    )
+
+    add_test(
+        NAME foundation_smoke_test
+        COMMAND test_foundation
+    )
 endif()
+
+# ============================================================
+# Summary
+# ============================================================
+
+message(STATUS "")
+message(STATUS "gpu_classical_algorithms_lab configuration summary")
+message(STATUS "------------------------------------------------")
+message(STATUS "C++ compiler:          ${CMAKE_CXX_COMPILER}")
+message(STATUS "Build type:            ${CMAKE_BUILD_TYPE}")
+message(STATUS "ENABLE_CUDA:           ${ENABLE_CUDA}")
+message(STATUS "GPUALGOBENCH_HAS_CUDA: ${GPUALGOBENCH_HAS_CUDA}")
+
+if(GPUALGOBENCH_HAS_CUDA)
+    message(STATUS "CUDA compiler:         ${CMAKE_CUDA_COMPILER}")
+    message(STATUS "CUDA version:          ${CMAKE_CUDA_COMPILER_VERSION}")
+    message(STATUS "CUDA architectures:    ${CMAKE_CUDA_ARCHITECTURES}")
+endif()
+
+message(STATUS "BUILD_TESTS:           ${BUILD_TESTS}")
+message(STATUS "")

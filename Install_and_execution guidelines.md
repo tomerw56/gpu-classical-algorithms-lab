@@ -8,3 +8,4 @@ call
 Remove-Item -Recurse -Force build-cuda-ninja -ErrorAction SilentlyContinue
 .\configure_ninja_cuda128.bat
 ```
+**Please Note** the 128 refers to the **<CUDA_VERSION>** i had (12.8) you can totally change it the a version you have across the batch and use it.
