@@ -39,16 +39,18 @@ Every benchmark should eventually have:
 
 ## Current foundation
 
-The current codebase contains the shared benchmark infrastructure, the `foundation_smoke` benchmark, three real Phase 2 algorithm benchmarks (`polynomial_batch`, `cost_matrix`, and `spatial_events`), and the Phase 3.1 CSR graph foundation used by upcoming traversal benchmarks.
+The current codebase contains the shared benchmark infrastructure, the `foundation_smoke` benchmark, three real Phase 2 algorithm benchmarks (`polynomial_batch`, `cost_matrix`, and `spatial_events`), the Phase 3.1 CSR graph foundation, and the Phase 3.2 `graph_bfs` traversal benchmark.
 
 It also contains:
 
 - `cuda_probe` for CUDA runtime diagnostics.
 - `execute_all_tests.bat` for running the current test/benchmark suite with one command.
+- `execute_graph_bfs_shapes.bat` for reproducing BFS chain/grid/layered/random comparisons.
+- `execute_graph_bfs_shape_scale_sweep.bat` for graph-shape × scale BFS sweeps.
 - `export_cost_matrix` and `plot_cost_matrix.py` for inspecting cost-matrix inputs/results.
 - `export_spatial_events` and `plot_spatial_events.py` for inspecting spatial-event geometry and result matrices.
 - `export_graph_foundation` and `plot_graph_foundation.py` for inspecting chain, grid, layered, and random sparse CSR demo graphs.
-- `CsrGraph`, deterministic graph generators, validation, and degree statistics for graph BFS/connectivity phases.
+- `CsrGraph`, deterministic graph generators, validation, degree statistics, and CPU/GPU BFS traversal over those graph shapes.
 
 ## Current implemented benchmarks
 
@@ -58,7 +60,7 @@ It also contains:
 
 `spatial_events` evaluates deterministic moving track segments against circular zones, classifying `none`, `enter`, `exit`, `stay_inside`, and `cross_through` cases. It has both CPU and CUDA implementations, event-code and score validation, JSONL result metadata, dedicated tests, and an exporter/plotter pair for visual inspection.
 
-`graph_foundation` is not a benchmark yet. It establishes the CSR representation and deterministic chain, grid, layered, and sparse graph generators that the upcoming BFS and connectivity benchmarks will share. Phase 3.1.1 adds an exporter/plotter pair so those graph shapes can be inspected before traversal timing begins.
+`graph_foundation` establishes the CSR representation and deterministic chain, grid, layered, and sparse graph generators. Phase 3.1.1 adds an exporter/plotter pair so those graph shapes can be inspected. Phase 3.2 adds `graph_bfs`, a CPU queue BFS versus CUDA frontier BFS traversal benchmark over those same shapes. Phase 3.2.1 documents why this first transparent GPU BFS can lose to the CPU baseline and adds a shape-comparison runner.
 
 See:
 
@@ -71,7 +73,16 @@ See:
 - `docs/graph_foundation.md`
 - `docs/phase_03_graph_foundation.md`
 - `docs/phase_03_graph_visualization.md`
+- `docs/graph_bfs.md`
+- `docs/phase_03_graph_bfs.md`
+- `docs/phase_03_graph_bfs_analysis.md`
 
 ## Test foundation
 
-The test suite covers the registry, CLI, JSON writer, random utilities, device info, foundation smoke benchmark semantics, polynomial benchmark semantics, cost-matrix benchmark semantics, spatial-event benchmark semantics, and CSR graph foundation semantics.
+The test suite covers the registry, CLI, JSON writer, random utilities, device info, foundation smoke benchmark semantics, polynomial benchmark semantics, cost-matrix benchmark semantics, spatial-event benchmark semantics, CSR graph foundation semantics, and BFS traversal semantics.
+
+## Current graph-BFS follow-up
+
+Phase 3.2.2 adds `execute_graph_bfs_scale_sweep.bat` and `scripts/plot_graph_bfs_scaling.py` so the layered BFS case can be measured from tiny graphs through a very large graph and plotted as both runtime and CPU/GPU speedup curves.
+
+Phase 3.2.3 adds `execute_graph_bfs_shape_scale_sweep.bat` and `scripts/plot_graph_bfs_shape_scaling.py` so chain, grid, layered, and random graph families can be swept across size ranges and compared on the same CPU/GPU speedup chart.

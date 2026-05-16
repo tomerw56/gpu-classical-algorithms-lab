@@ -3,6 +3,7 @@
 #include "polynomial/polynomial_batch.hpp"
 #include "cost_matrix/cost_matrix.hpp"
 #include "spatial_events/spatial_events.hpp"
+#include "graph/graph_bfs.hpp"
 
 #include <algorithm>
 #include <stdexcept>
@@ -147,6 +148,31 @@ BenchmarkRegistry make_default_registry()
             if (config.include_gpu)
             {
                 auto gpu_results = spatial_events::run_spatial_events_gpu(config);
+                results.insert(results.end(), gpu_results.begin(), gpu_results.end());
+            }
+#else
+            (void)config;
+#endif
+
+            return results;
+        });
+
+
+    registry.add(
+        BenchmarkInfo{
+            "graph_bfs",
+            "CSR breadth-first search / reachability: CPU queue BFS versus GPU frontier BFS.",
+            {"tiny", "small", "medium", "large"}},
+        [](const BenchmarkConfig& config) {
+            std::vector<BenchmarkResult> results;
+
+            auto cpu_results = graph_bfs::run_graph_bfs_cpu(config);
+            results.insert(results.end(), cpu_results.begin(), cpu_results.end());
+
+#if GPUALGOBENCH_ENABLE_CUDA
+            if (config.include_gpu)
+            {
+                auto gpu_results = graph_bfs::run_graph_bfs_gpu(config);
                 results.insert(results.end(), gpu_results.begin(), gpu_results.end());
             }
 #else

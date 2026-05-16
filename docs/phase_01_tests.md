@@ -15,6 +15,7 @@ CTest currently runs these executables:
 | `test_cost_matrix` | Checks cost-matrix presets, deterministic task/resource generation, forced feasible/infeasible pairs, result metadata, and repeat/checksum policy. |
 | `test_spatial_events` | Checks spatial-event presets, deterministic tracks/zones, forced enter/exit/stay/cross/none cases, result metadata, and repeat/checksum policy. |
 | `test_graph_foundation` | Checks CSR building/validation, chain/grid/layered/sparse graph generators, degree statistics, and bad-input rejection. |
+| `test_graph_bfs` | Checks CPU queue BFS distances on chain/grid/disconnected graphs, tiny benchmark metadata, and bad-source rejection. |
 | `test_registry` | Checks default benchmark registration, `all`, named benchmark execution, and unknown benchmark errors. |
 | `test_cli` | Checks command-line parsing, flags, repeated `--set`, and invalid argument handling. |
 | `test_json_writer` | Checks JSONL serialization, escaping, append/truncate behavior, and table printing. |
@@ -77,4 +78,4 @@ Phase 3.1.1 adds `export_graph_foundation_smoke`. It exports small chain, grid, 
 
 ## Graph foundation coverage
 
-Phase 3.1 adds `test_graph_foundation`. It does not benchmark traversal yet; it validates the reusable CSR substrate that the upcoming BFS and connectivity work will rely on.
+Phase 3.1 adds `test_graph_foundation`. Phase 3.2 adds `test_graph_bfs`, which validates the queue BFS reference and the registered benchmark metadata before relying on it for CPU/GPU timing comparisons.

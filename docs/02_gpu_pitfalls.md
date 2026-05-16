@@ -65,3 +65,17 @@ Atomics are sometimes necessary, especially in graph algorithms. They can also c
 ### Output explosion
 
 Combination search and spatial matching can produce enormous outputs. Often the GPU should return counts, best candidates, histograms, or top-K results rather than every match.
+
+### Irregular graph traversal
+
+Graph traversal often looks parallel from a distance, but naïve GPU BFS can still lose badly. A level-synchronous implementation may pay for:
+
+```text
+many kernel launches
+per-level synchronization
+frontier-size control copies
+atomics during discovery and queue construction
+poor occupancy on narrow frontiers
+```
+
+The `graph_bfs` benchmark intentionally demonstrates this. The dense Phase 2 benchmarks often reward the GPU immediately; the first transparent GPU BFS may not.

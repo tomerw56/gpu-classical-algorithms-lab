@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 
 project(gpu_classical_algorithms_lab
-    VERSION 0.3.1
+    VERSION 0.3.2.3
     DESCRIPTION "Classical algorithms CPU/GPU benchmark lab"
     LANGUAGES CXX
 )
@@ -104,6 +104,8 @@ set(GPUALGOBENCH_COMMON_SOURCES
     src/spatial_events/spatial_events_common.cpp
     src/spatial_events/spatial_events_cpu.cpp
     src/graph/graph_foundation.cpp
+    src/graph/graph_bfs_common.cpp
+    src/graph/graph_bfs_cpu.cpp
 )
 
 if(GPUALGOBENCH_HAS_CUDA)
@@ -112,6 +114,7 @@ if(GPUALGOBENCH_HAS_CUDA)
         src/polynomial/polynomial_batch_gpu.cu
         src/cost_matrix/cost_matrix_gpu.cu
         src/spatial_events/spatial_events_gpu.cu
+        src/graph/graph_bfs_gpu.cu
     )
 endif()
 
@@ -292,6 +295,7 @@ if(BUILD_TESTS)
     add_algobench_test(test_cost_matrix tests/test_cost_matrix.cpp)
     add_algobench_test(test_spatial_events tests/test_spatial_events.cpp)
     add_algobench_test(test_graph_foundation tests/test_graph_foundation.cpp)
+    add_algobench_test(test_graph_bfs tests/test_graph_bfs.cpp)
 
     add_test(
         NAME export_cost_matrix_smoke
@@ -339,6 +343,24 @@ endif()
 configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/execute_all_tests.bat
     ${CMAKE_CURRENT_BINARY_DIR}/execute_all_tests.bat
+    COPYONLY
+)
+
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/execute_graph_bfs_shapes.bat
+    ${CMAKE_CURRENT_BINARY_DIR}/execute_graph_bfs_shapes.bat
+    COPYONLY
+)
+
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/execute_graph_bfs_scale_sweep.bat
+    ${CMAKE_CURRENT_BINARY_DIR}/execute_graph_bfs_scale_sweep.bat
+    COPYONLY
+)
+
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/execute_graph_bfs_shape_scale_sweep.bat
+    ${CMAKE_CURRENT_BINARY_DIR}/execute_graph_bfs_shape_scale_sweep.bat
     COPYONLY
 )
 

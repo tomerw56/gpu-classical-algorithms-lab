@@ -18,7 +18,7 @@ Example:
 - `input_size`: benchmark-specific dimensions.
 - `total_ms`: total measured time.
 - `h2d_ms`: host-to-device transfer time.
-- `kernel_ms`: GPU kernel time.
+- `kernel_ms`: GPU timed compute-region time. For dense single-kernel benchmarks this is close to kernel-only time; benchmark docs clarify exceptions. `graph_bfs` uses this field for its timed traversal-loop region.
 - `d2h_ms`: device-to-host transfer time.
 - `correct`: correctness result.
 - `device`: CPU or GPU description.
@@ -79,3 +79,37 @@ These fields make it possible to compare performance while confirming that branc
 - `validation`: short description of the validator.
 
 These fields make it possible to compare CPU/GPU performance while confirming that geometry classification and floating-point scoring stayed aligned.
+
+
+## Graph-BFS metadata
+
+For scale-sweep plots, scripts may normalize a timing field by repeat count. In particular, `scripts/plot_graph_bfs_scaling.py` plots:
+
+```text
+average_ms_per_BFS_run = total_ms / repeat
+```
+
+and reports:
+
+```text
+speedup = CPU_ms_per_run / GPU_ms_per_run
+```
+
+`scripts/plot_graph_bfs_shape_scaling.py` applies the same normalization while retaining graph-kind and shape metadata so chain, grid, layered, and random graph families can be compared in one report.
+
+`graph_bfs` adds benchmark-specific metadata:
+
+- `graph_kind`: `chain`, `grid`, `layered`, or `random`.
+- `shape`: compact shape description such as layer count or grid dimensions.
+- `source`: BFS source node.
+- `edge_count`, `min_out_degree`, `max_out_degree`, `mean_out_degree`, `zero_out_degree_count`: graph-summary fields.
+- `reached_count`: how many nodes were reachable from the source.
+- `max_distance`: largest discovered BFS distance.
+- `mismatch_count`: exact distance mismatches against the CPU reference.
+- `checksum` and `reference_checksum`: compact final-distance signatures.
+- `frontier_iterations`: GPU row only; number of BFS frontier rounds.
+- `gpu_algorithm`: GPU row only; description of the level-synchronous frontier algorithm.
+- `kernel_ms_semantics`: GPU row only; explains that the timed region covers the traversal loop rather than a single isolated frontier kernel.
+- `validation`: short description of the distance validator.
+
+These fields are particularly important because BFS performance depends heavily on graph topology and frontier shape.

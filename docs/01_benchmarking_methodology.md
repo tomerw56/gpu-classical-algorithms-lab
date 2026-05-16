@@ -26,11 +26,16 @@ CPU timing uses `std::chrono::steady_clock`.
 CUDA benchmarks should report:
 
 - Host-to-device copy time.
-- Kernel time.
+- Timed GPU compute-region time.
 - Device-to-host copy time.
 - Total GPU time.
 
-This split is important because a GPU kernel can look impressive while end-to-end performance is worse than CPU due to transfer overhead.
+For many dense examples, the compute-region time is effectively kernel time. Some algorithms need a broader interpretation. `graph_bfs`, for example, reports `kernel_ms` as the timed traversal-loop region because BFS advances through many frontier levels rather than one isolated kernel launch.
+
+When plotting repeated benchmark rows, prefer a per-run metric such as `total_ms / repeat`. The graph-BFS scale-sweep plotter performs that normalization automatically so a five-repeat sweep is shown as average milliseconds per BFS run rather than accumulated five-run time.
+The graph-shape × scale BFS plotter uses the same normalization and groups rows by `graph_kind`, which makes it possible to compare topology as well as size.
+
+This split is important because a GPU compute region can look impressive while end-to-end performance is worse than CPU due to transfer overhead, synchronization, or orchestration cost.
 
 ## Correctness
 
@@ -66,4 +71,4 @@ Use presets:
 
 ## Test coverage
 
-The tests intentionally check benchmark semantics, not raw performance. For example, `test_foundation` verifies that repeat count affects timing but does not alter the meaning of the reported checksum. `test_polynomial` applies the same rule to the first real algorithm benchmark and also checks Horner evaluation against a direct polynomial sum for a representative input. `test_cost_matrix` applies the same repeat/checksum policy to a branch-heavy dense matrix and checks both feasible and infeasible pair construction. `test_spatial_events` applies the same policy to a dense track-zone event matrix and forces `enter`, `exit`, `stay_inside`, `cross_through`, and `none` cases. Future algorithm benchmarks should follow the same pattern: small deterministic correctness cases first, performance measurements second.
+The tests intentionally check benchmark semantics, not raw performance. For example, `test_foundation` verifies that repeat count affects timing but does not alter the meaning of the reported checksum. `test_polynomial` applies the same rule to the first real algorithm benchmark and also checks Horner evaluation against a direct polynomial sum for a representative input. `test_cost_matrix` applies the same repeat/checksum policy to a branch-heavy dense matrix and checks both feasible and infeasible pair construction. `test_spatial_events` applies the same policy to a dense track-zone event matrix and forces `enter`, `exit`, `stay_inside`, `cross_through`, and `none` cases. `test_graph_bfs` validates the CPU queue-BFS reference distances and registered benchmark metadata before performance claims are made. Future algorithm benchmarks should follow the same pattern: small deterministic correctness cases first, performance measurements second.

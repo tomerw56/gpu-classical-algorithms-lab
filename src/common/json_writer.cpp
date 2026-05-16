@@ -146,21 +146,21 @@ void print_result_table(std::ostream& os, const std::vector<BenchmarkResult>& re
     os << std::left
        << std::setw(24) << "benchmark"
        << std::setw(10) << "variant"
-       << std::setw(10) << "preset"
+       << std::setw(22) << "preset"
        << std::right
        << std::setw(14) << "total_ms"
        << std::setw(12) << "kernel_ms"
        << std::setw(10) << "correct"
        << "  device\n";
 
-    os << std::string(92, '-') << '\n';
+    os << std::string(104, '-') << '\n';
 
     for (const auto& r : results)
     {
         os << std::left
            << std::setw(24) << r.benchmark
            << std::setw(10) << r.variant
-           << std::setw(10) << r.preset
+           << std::setw(22) << r.preset
            << std::right
            << std::setw(14) << std::fixed << std::setprecision(3) << r.total_ms
            << std::setw(12) << std::fixed << std::setprecision(3) << r.kernel_ms
