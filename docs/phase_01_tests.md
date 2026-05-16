@@ -13,6 +13,8 @@ CTest currently runs these executables:
 | `test_foundation` | Checks `foundation_smoke` presets, CPU result metadata, correctness, and repeat/checksum policy. |
 | `test_polynomial` | Checks polynomial presets, 16-coefficient layout, stride-100 x policy, Horner correctness, benchmark metadata, and repeat/checksum policy. |
 | `test_cost_matrix` | Checks cost-matrix presets, deterministic task/resource generation, forced feasible/infeasible pairs, result metadata, and repeat/checksum policy. |
+| `test_spatial_events` | Checks spatial-event presets, deterministic tracks/zones, forced enter/exit/stay/cross/none cases, result metadata, and repeat/checksum policy. |
+| `test_graph_foundation` | Checks CSR building/validation, chain/grid/layered/sparse graph generators, degree statistics, and bad-input rejection. |
 | `test_registry` | Checks default benchmark registration, `all`, named benchmark execution, and unknown benchmark errors. |
 | `test_cli` | Checks command-line parsing, flags, repeated `--set`, and invalid argument handling. |
 | `test_json_writer` | Checks JSONL serialization, escaping, append/truncate behavior, and table printing. |
@@ -47,7 +49,7 @@ ctest --test-dir "<build-dir>" --output-on-failure --verbose
 
 ## Correctness policy covered by tests
 
-The foundation, polynomial, and cost-matrix tests verify that `--repeat` is a timing setting only. The reported checksum must describe the final single output vector, not the sum of all repeated executions.
+The foundation, polynomial, cost-matrix, and spatial-event tests verify that `--repeat` is a timing setting only. The reported checksum must describe the final single output vector, not the sum of all repeated executions.
 
 This matters because CPU and GPU benchmark rows must describe the same logical computation. Different checksum semantics would make them different benchmarks.
 
@@ -66,4 +68,13 @@ For now, the local assertion helper is enough. Later, we can move to Catch2 or G
 
 ## Exporter smoke coverage
 
-Phase 2.2 adds a small CTest entry named `export_cost_matrix_smoke`. It runs the CSV exporter on a `4 x 5` matrix and verifies through process success that the inspectable export path remains wired into the build.
+Phase 2.2 adds a small CTest entry named `export_cost_matrix_smoke`. It runs the CSV exporter on a `4 x 5` matrix and verifies through process success that the inspectable cost-matrix export path remains wired into the build.
+
+Phase 2.3 adds `export_spatial_events_smoke`. It runs the spatial exporter on a `5 tracks x 4 zones` scene and verifies through process success that the track/zone visualization export path remains wired into the build.
+
+Phase 3.1.1 adds `export_graph_foundation_smoke`. It exports small chain, grid, layered, and random sparse graph snapshots and verifies through process success that the graph visualization bundle path remains wired into the build.
+
+
+## Graph foundation coverage
+
+Phase 3.1 adds `test_graph_foundation`. It does not benchmark traversal yet; it validates the reusable CSR substrate that the upcoming BFS and connectivity work will rely on.

@@ -60,3 +60,22 @@ These fields are useful when plotting performance while still preserving evidenc
 - `validation`: short description of the validator.
 
 These fields make it possible to compare performance while confirming that branch-heavy feasibility logic stayed semantically aligned between CPU and GPU.
+
+
+## Spatial-event metadata
+
+`spatial_events` adds benchmark-specific metadata:
+
+- `checksum`: sum of final event scores for non-`none` cells.
+- `reference_checksum`: CPU-reference score sum for the same event matrix.
+- `event_count`: number of non-`none` final event cells.
+- `reference_event_count`: CPU-reference non-`none` count.
+- `event_mismatches`: count of event-code disagreements.
+- `none_count`, `enter_count`, `exit_count`, `stay_inside_count`, `cross_through_count`: actual final event-code distribution.
+- `reference_none_count`, `reference_enter_count`, `reference_exit_count`, `reference_stay_inside_count`, `reference_cross_through_count`: CPU-reference event-code distribution.
+- `max_abs_error`: largest cell-wise absolute score error.
+- `max_rel_error`: largest cell-wise relative score error.
+- `event_model`: compact description of the emitted event classes.
+- `validation`: short description of the validator.
+
+These fields make it possible to compare CPU/GPU performance while confirming that geometry classification and floating-point scoring stayed aligned.

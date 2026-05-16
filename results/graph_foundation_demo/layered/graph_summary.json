@@ -1,0 +1,12 @@
+{
+  "graph_type": "layered",
+  "display_name": "Directed layered wide-frontier graph",
+  "layout": "x=layer, y=-position within layer",
+  "node_count": 24,
+  "directed_adjacency_entry_count": 36,
+  "min_out_degree": 0,
+  "max_out_degree": 2,
+  "mean_out_degree": 1.5,
+  "zero_out_degree_count": 6,
+  "parameters": {"layer_count": 4, "nodes_per_layer": 6, "fanout": 2}
+}

@@ -34,7 +34,7 @@ This split is important because a GPU kernel can look impressive while end-to-en
 
 ## Correctness
 
-Every CPU/GPU pair should compare results. Floating-point examples should use tolerance-based comparison. The polynomial benchmark uses element-wise CPU-reference validation and reports `max_abs_error` and `max_rel_error`. The cost-matrix benchmark additionally validates feasibility flags, feasible-pair counts, and branch-heavy cost values.
+Every CPU/GPU pair should compare results. Floating-point examples should use tolerance-based comparison. The polynomial benchmark uses element-wise CPU-reference validation and reports `max_abs_error` and `max_rel_error`. The cost-matrix benchmark additionally validates feasibility flags, feasible-pair counts, and branch-heavy cost values. The spatial-event benchmark validates exact event codes, event counts, per-event-type counts, and tolerance-based event scores.
 
 Important rule: `--repeat` is a timing control, not a correctness multiplier. If a benchmark executes the same transform 5 times, the reported checksum should normally describe the final single output, not the sum of 5 checksums. Otherwise CPU and GPU rows may be timing comparable but validating different effective values.
 
@@ -66,4 +66,4 @@ Use presets:
 
 ## Test coverage
 
-The tests intentionally check benchmark semantics, not raw performance. For example, `test_foundation` verifies that repeat count affects timing but does not alter the meaning of the reported checksum. `test_polynomial` applies the same rule to the first real algorithm benchmark and also checks Horner evaluation against a direct polynomial sum for a representative input. `test_cost_matrix` applies the same repeat/checksum policy to a branch-heavy dense matrix and checks both feasible and infeasible pair construction. Future algorithm benchmarks should follow the same pattern: small deterministic correctness cases first, performance measurements second.
+The tests intentionally check benchmark semantics, not raw performance. For example, `test_foundation` verifies that repeat count affects timing but does not alter the meaning of the reported checksum. `test_polynomial` applies the same rule to the first real algorithm benchmark and also checks Horner evaluation against a direct polynomial sum for a representative input. `test_cost_matrix` applies the same repeat/checksum policy to a branch-heavy dense matrix and checks both feasible and infeasible pair construction. `test_spatial_events` applies the same policy to a dense track-zone event matrix and forces `enter`, `exit`, `stay_inside`, `cross_through`, and `none` cases. Future algorithm benchmarks should follow the same pattern: small deterministic correctness cases first, performance measurements second.

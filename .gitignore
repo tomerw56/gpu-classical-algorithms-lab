@@ -10,5 +10,3 @@ results/*.jsonl
 results/*.png
 results/*.md
 !results/.gitkeep
-*.png
-/results

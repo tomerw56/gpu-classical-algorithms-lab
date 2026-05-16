@@ -2,7 +2,7 @@
 
 A C++/CUDA benchmark playground for testing where GPU acceleration helps classical algorithmic workloads: graph theory, constraint checking, cost matrices, spatial events, combinations, local search, and scenario simulation.
 
-This repository is currently in **Phase 2.2: branch-heavy `cost_matrix` generation, after the Phase 2 polynomial benchmark and Phase 1 infrastructure**.
+This repository is currently in **Phase 3.1.1: graph foundation visualization utilities**, after the Phase 1 infrastructure and the three Phase 2 CPU/GPU pairwise/data-parallel benchmarks.
 
 The current codebase includes:
 
@@ -18,10 +18,14 @@ The current codebase includes:
 - A small `foundation_smoke` benchmark to verify the infrastructure.
 - `cuda_probe` diagnostic executable.
 - `execute_all_tests.bat` to run the current test/benchmark suite from one command.
-- CTest coverage for the registry, CLI, JSONL writer, random utilities, device info, foundation benchmark semantics, and the polynomial benchmark.
+- CTest coverage for the registry, CLI, JSONL writer, random utilities, device info, foundation benchmark semantics, polynomial, cost-matrix, spatial-event, and graph-foundation semantics.
 - `polynomial_batch`: degree-15 polynomial evaluation over many stride-100 `x` values, with CPU and CUDA implementations.
 - `cost_matrix`: branch-heavy task/resource feasibility and cost generation, with CPU and CUDA implementations.
+- `spatial_events`: track-segment versus circular-zone event detection, with CPU and CUDA implementations.
 - `export_cost_matrix`: inspectable CSV exporter used by the Python matrix plotting utility.
+- `export_spatial_events`: inspectable CSV exporter used by the Python spatial-event plotting utility.
+- `export_graph_foundation`: inspectable multi-graph CSR exporter used by the Python graph-foundation plotting utility.
+- Graph foundation utilities: deterministic CSR construction plus chain, grid, layered, and sparse graph generators for later BFS/connectivity benchmarks.
 
 ## Build
 
@@ -88,6 +92,30 @@ Run the cost-matrix benchmark:
 build-cuda-ninja\gpu_algobench.exe --benchmark cost_matrix --preset small --repeat 5 --warmup 1
 ```
 
+Run the spatial-event benchmark:
+
+```bat
+build-cuda-ninja\gpu_algobench.exe --benchmark spatial_events --preset small --repeat 5 --warmup 1
+```
+
+Graph Phase 3.1 is a data foundation rather than a timing benchmark. Its CSR structures and deterministic generators are exercised through CTest:
+
+```bat
+ctest --test-dir build-cuda-ninja -R test_graph_foundation --output-on-failure --verbose
+```
+
+Export a small graph-foundation visualization bundle:
+
+```bat
+build-cuda-ninja\export_graph_foundation.exe --output-dir results\graph_foundation_demo
+```
+
+Plot the chain, grid, layered, and random sparse demo graphs plus the out-degree histogram:
+
+```bat
+python scripts\plot_graph_foundation.py --input-dir results\graph_foundation_demo --show
+```
+
 Export a small cost matrix for visual inspection:
 
 ```bat
@@ -107,12 +135,32 @@ build-cuda-ninja\export_cost_matrix.exe --tasks 96 --resources 128 --output-dir 
 python scripts\plot_cost_matrix.py --input-dir results\cost_matrix_96x128 --max-surface-dim 160
 ```
 
+Export a small spatial-event scene for visual inspection:
+
+```bat
+build-cuda-ninja\export_spatial_events.exe --output-dir results\spatial_events_demo
+```
+
+Plot the exported scene, event overlay, event-code matrix, and score matrix:
+
+```bat
+python scripts\plot_spatial_events.py --input-dir results\spatial_events_demo --show
+```
+
+For a custom readable scene:
+
+```bat
+build-cuda-ninja\export_spatial_events.exe --tracks 48 --zones 16 --output-dir results\spatial_events_48x16
+python scripts\plot_spatial_events.py --input-dir results\spatial_events_48x16 --max-overlay-events 300
+```
+
 Write JSONL results:
 
 ```bat
 build-cuda-ninja\gpu_algobench.exe --benchmark foundation_smoke --preset small --repeat 5 --output results\smoke.jsonl
 build-cuda-ninja\gpu_algobench.exe --benchmark polynomial_batch --preset medium --repeat 5 --warmup 1 --output results\polynomial_medium.jsonl
 build-cuda-ninja\gpu_algobench.exe --benchmark cost_matrix --preset medium --repeat 3 --warmup 1 --output results\cost_matrix_medium.jsonl
+build-cuda-ninja\gpu_algobench.exe --benchmark spatial_events --preset medium --repeat 3 --warmup 1 --output results\spatial_events_medium.jsonl
 ```
 
 ## Execute all tests and current benchmarks
@@ -155,7 +203,7 @@ Each benchmark run emits one JSON object per line:
 {"benchmark":"foundation_smoke","variant":"cpu","preset":"small","repeat":5,"warmup":1,"input_size":{"values":1000000},"total_ms":3.4,"h2d_ms":0.0,"kernel_ms":0.0,"d2h_ms":0.0,"correct":true,"device":"CPU","notes":"infrastructure smoke benchmark"}
 ```
 
-A polynomial result also records benchmark-specific metadata such as `coefficient_count`, `x_step`, `x_cycle`, `checksum`, `reference_checksum`, `max_abs_error`, and `max_rel_error`. A cost-matrix result records `feasible_count`, `reference_feasible_count`, `feasibility_mismatches`, `checksum`, `reference_checksum`, `max_abs_error`, and `max_rel_error`.
+A polynomial result also records benchmark-specific metadata such as `coefficient_count`, `x_step`, `x_cycle`, `checksum`, `reference_checksum`, `max_abs_error`, and `max_rel_error`. A cost-matrix result records `feasible_count`, `reference_feasible_count`, `feasibility_mismatches`, `checksum`, `reference_checksum`, `max_abs_error`, and `max_rel_error`. A spatial-event result records `event_count`, `reference_event_count`, `event_mismatches`, per-event-type counts, `checksum`, `reference_checksum`, `max_abs_error`, and `max_rel_error`.
 
 Use JSONL because it is easy to append, diff, parse, and plot.
 
@@ -167,8 +215,12 @@ Use JSONL because it is easy to append, diff, parse, and plot.
 - Phase 1.3: infrastructure tests.
 - Phase 2.1: polynomial batch evaluation.
 - Phase 2.2: complex cost matrix generation.
-- Phase 2.3: spatial event detection.
-- Phase 3: graph BFS, connected components, weighted relaxation.
+- Phase 2.3: spatial event detection. **Implemented.**
+- Phase 3.1: CSR graph foundation and deterministic graph generators. **Implemented.**
+- Phase 3.1.1: graph export/visualization utilities. **Implemented.**
+- Phase 3.2: graph BFS and reachability. **Next.**
+- Phase 3.3: connected components.
+- Phase 3.4: weighted relaxation.
 - Phase 4: combinations, constraint network, local-search scoring, assignment preprocessing, scenario simulation.
 
 ## Important benchmark rule
@@ -189,18 +241,22 @@ Benchmark repeats are for timing only. Validation metadata such as `checksum` sh
 
 ## Current CTest suite
 
-The project currently builds eight dependency-free C++ test executables, plus one exporter smoke test registered directly with CTest:
+The project currently builds ten dependency-free C++ test executables, plus three exporter smoke tests registered directly with CTest:
 
 ```text
 test_foundation
 test_polynomial
 test_cost_matrix
+test_spatial_events
+test_graph_foundation
 test_registry
 test_cli
 test_json_writer
 test_random_utils
 test_device_info
 export_cost_matrix_smoke
+export_spatial_events_smoke
+export_graph_foundation_smoke
 ```
 
 Run them directly with:

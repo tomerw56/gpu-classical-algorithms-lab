@@ -1,0 +1,9 @@
+{
+  "preset": "tiny",
+  "task_count": 64,
+  "resource_count": 64,
+  "cell_count": 4096,
+  "feasible_count": 1331,
+  "infeasible_cost": 1e+30,
+  "layout": "row-major: flat_index = task_index * resource_count + resource_index"
+}

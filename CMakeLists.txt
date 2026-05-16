@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 
 project(gpu_classical_algorithms_lab
-    VERSION 0.2.2
+    VERSION 0.3.1
     DESCRIPTION "Classical algorithms CPU/GPU benchmark lab"
     LANGUAGES CXX
 )
@@ -101,6 +101,9 @@ set(GPUALGOBENCH_COMMON_SOURCES
     src/polynomial/polynomial_batch_cpu.cpp
     src/cost_matrix/cost_matrix_common.cpp
     src/cost_matrix/cost_matrix_cpu.cpp
+    src/spatial_events/spatial_events_common.cpp
+    src/spatial_events/spatial_events_cpu.cpp
+    src/graph/graph_foundation.cpp
 )
 
 if(GPUALGOBENCH_HAS_CUDA)
@@ -108,6 +111,7 @@ if(GPUALGOBENCH_HAS_CUDA)
         src/foundation/foundation_smoke_gpu.cu
         src/polynomial/polynomial_batch_gpu.cu
         src/cost_matrix/cost_matrix_gpu.cu
+        src/spatial_events/spatial_events_gpu.cu
     )
 endif()
 
@@ -237,6 +241,24 @@ target_link_libraries(export_cost_matrix
         gpu_algobench_common
 )
 
+add_executable(export_spatial_events
+    apps/export_spatial_events.cpp
+)
+
+target_link_libraries(export_spatial_events
+    PRIVATE
+        gpu_algobench_common
+)
+
+add_executable(export_graph_foundation
+    apps/export_graph_foundation.cpp
+)
+
+target_link_libraries(export_graph_foundation
+    PRIVATE
+        gpu_algobench_common
+)
+
 # ============================================================
 # Tests
 # ============================================================
@@ -268,6 +290,8 @@ if(BUILD_TESTS)
     add_algobench_test(test_foundation tests/test_foundation.cpp)
     add_algobench_test(test_polynomial tests/test_polynomial.cpp)
     add_algobench_test(test_cost_matrix tests/test_cost_matrix.cpp)
+    add_algobench_test(test_spatial_events tests/test_spatial_events.cpp)
+    add_algobench_test(test_graph_foundation tests/test_graph_foundation.cpp)
 
     add_test(
         NAME export_cost_matrix_smoke
@@ -275,6 +299,28 @@ if(BUILD_TESTS)
             --tasks 4
             --resources 5
             --output-dir ${CMAKE_CURRENT_BINARY_DIR}/export_cost_matrix_smoke
+    )
+
+    add_test(
+        NAME export_spatial_events_smoke
+        COMMAND export_spatial_events
+            --tracks 5
+            --zones 4
+            --output-dir ${CMAKE_CURRENT_BINARY_DIR}/export_spatial_events_smoke
+    )
+
+    add_test(
+        NAME export_graph_foundation_smoke
+        COMMAND export_graph_foundation
+            --chain-nodes 6
+            --grid-width 3
+            --grid-height 2
+            --layers 3
+            --nodes-per-layer 4
+            --fanout 2
+            --random-nodes 8
+            --random-out-degree 2
+            --output-dir ${CMAKE_CURRENT_BINARY_DIR}/export_graph_foundation_smoke
     )
 
     add_algobench_test(test_registry tests/test_registry.cpp)
