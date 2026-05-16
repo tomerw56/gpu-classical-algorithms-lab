@@ -27,3 +27,19 @@ Example:
 ## Why JSONL
 
 JSONL is convenient because it can be appended during long runs, parsed line-by-line, and loaded easily from Python.
+
+
+## Polynomial metadata
+
+`polynomial_batch` adds benchmark-specific metadata:
+
+- `coefficient_count`: currently `16`.
+- `x_step`: currently `100`.
+- `x_cycle`: the bounded stride-100 domain cycle length.
+- `checksum`: sum of the final output vector.
+- `reference_checksum`: CPU-reference sum for the same final vector.
+- `max_abs_error`: largest element-wise absolute error.
+- `max_rel_error`: largest element-wise relative error.
+- `validation`: short description of the validator.
+
+These fields are useful when plotting performance while still preserving evidence that CPU and GPU variants computed the same logical benchmark.

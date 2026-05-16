@@ -9,6 +9,14 @@ Every benchmark supports:
 
 The current infrastructure reports aggregate time over the measured repeats. Later phases may add min/mean/max/p95.
 
+`execute_all_tests.bat` centralizes these values at the top of the file:
+
+```bat
+set "BENCHMARK_PRESET=small"
+set "BENCHMARK_REPEAT=5"
+set "BENCHMARK_WARMUP=1"
+```
+
 ## CPU timing
 
 CPU timing uses `std::chrono::steady_clock`.
@@ -26,7 +34,9 @@ This split is important because a GPU kernel can look impressive while end-to-en
 
 ## Correctness
 
-Every CPU/GPU pair should compare results. Floating-point examples should use tolerance-based comparison.
+Every CPU/GPU pair should compare results. Floating-point examples should use tolerance-based comparison. The polynomial benchmark uses element-wise CPU-reference validation and reports `max_abs_error` and `max_rel_error`.
+
+Important rule: `--repeat` is a timing control, not a correctness multiplier. If a benchmark executes the same transform 5 times, the reported checksum should normally describe the final single output, not the sum of 5 checksums. Otherwise CPU and GPU rows may be timing comparable but validating different effective values.
 
 Suggested tolerances:
 
@@ -53,3 +63,7 @@ Use presets:
 - Speedup ratio.
 - Break-even point.
 - Transfer overhead percentage.
+
+## Test coverage
+
+The tests intentionally check benchmark semantics, not raw performance. For example, `test_foundation` verifies that repeat count affects timing but does not alter the meaning of the reported checksum. `test_polynomial` applies the same rule to the first real algorithm benchmark and also checks Horner evaluation against a direct polynomial sum for a representative input. Future algorithm benchmarks should follow the same pattern: small deterministic correctness cases first, performance measurements second.

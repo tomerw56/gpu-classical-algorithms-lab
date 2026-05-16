@@ -1,5 +1,6 @@
 #include "common/benchmark_registry.hpp"
 #include "foundation/foundation_smoke.hpp"
+#include "polynomial/polynomial_batch.hpp"
 
 #include <algorithm>
 #include <stdexcept>
@@ -72,6 +73,30 @@ BenchmarkRegistry make_default_registry()
             if (config.include_gpu)
             {
                 auto gpu_results = foundation::run_foundation_smoke_gpu(config);
+                results.insert(results.end(), gpu_results.begin(), gpu_results.end());
+            }
+#else
+            (void)config;
+#endif
+
+            return results;
+        });
+
+    registry.add(
+        BenchmarkInfo{
+            "polynomial_batch",
+            "Degree-15 polynomial evaluation over many stride-100 x values using Horner's method.",
+            {"tiny", "small", "medium", "large"}},
+        [](const BenchmarkConfig& config) {
+            std::vector<BenchmarkResult> results;
+
+            auto cpu_results = polynomial::run_polynomial_batch_cpu(config);
+            results.insert(results.end(), cpu_results.begin(), cpu_results.end());
+
+#if GPUALGOBENCH_ENABLE_CUDA
+            if (config.include_gpu)
+            {
+                auto gpu_results = polynomial::run_polynomial_batch_gpu(config);
                 results.insert(results.end(), gpu_results.begin(), gpu_results.end());
             }
 #else

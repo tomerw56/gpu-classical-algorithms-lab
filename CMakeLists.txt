@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.24)
 
 project(gpu_classical_algorithms_lab
-    VERSION 0.1.0
+    VERSION 0.2.0
+    DESCRIPTION "Classical algorithms CPU/GPU benchmark lab"
     LANGUAGES CXX
 )
 
@@ -14,7 +15,8 @@ option(BUILD_TESTS "Build tests" ON)
 option(ENABLE_WARNINGS_AS_ERRORS "Treat warnings as errors" OFF)
 
 # If ON, requesting CUDA but failing to find it is a hard error.
-# For this project, that is usually what we want while developing.
+# This is useful while developing the GPU-enabled build, because it prevents
+# accidental CPU-only builds when CUDA was expected.
 option(REQUIRE_CUDA "Fail configure if ENABLE_CUDA=ON but CUDA is unavailable" ON)
 
 # ============================================================
@@ -59,12 +61,10 @@ if(ENABLE_CUDA)
         endif()
 
         # If the user did not provide an architecture, choose a reasonable
-        # default for your current RTX 1000 Ada setup.
+        # default for the current RTX 1000 Ada setup.
         #
-        # You can override this from the command line:
+        # Override from the command line when needed:
         #   -DCMAKE_CUDA_ARCHITECTURES=89
-        #
-        # For other GPUs, adjust accordingly.
         if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
             set(CMAKE_CUDA_ARCHITECTURES 89)
             message(STATUS "CMAKE_CUDA_ARCHITECTURES not set; defaulting to 89")
@@ -98,11 +98,13 @@ set(GPUALGOBENCH_COMMON_SOURCES
     src/common/random_utils.cpp
 
     src/foundation/foundation_smoke_cpu.cpp
+    src/polynomial/polynomial_batch_cpu.cpp
 )
 
 if(GPUALGOBENCH_HAS_CUDA)
     list(APPEND GPUALGOBENCH_COMMON_SOURCES
         src/foundation/foundation_smoke_gpu.cu
+        src/polynomial/polynomial_batch_gpu.cu
     )
 endif()
 
@@ -115,11 +117,13 @@ target_include_directories(gpu_algobench_common
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
+target_compile_features(gpu_algobench_common PUBLIC cxx_std_17)
+
 if(GPUALGOBENCH_HAS_CUDA)
     # Important fix:
-    # device_info.cpp is compiled as C++ by cl.exe, but it includes
-    # cuda_runtime.h when CUDA is enabled. Therefore the CUDA include
-    # directory must also be visible to normal C++ sources.
+    # device_info.cpp is compiled as normal C++ by cl.exe, but it includes
+    # cuda_runtime.h when CUDA is enabled. Therefore the CUDA include directory
+    # must also be visible to C++ sources, not only to .cu sources.
     target_include_directories(gpu_algobench_common
         PRIVATE
             ${CUDAToolkit_INCLUDE_DIRS}
@@ -212,6 +216,15 @@ target_link_libraries(validate_all
         gpu_algobench_common
 )
 
+add_executable(cuda_probe
+    apps/cuda_probe.cpp
+)
+
+target_link_libraries(cuda_probe
+    PRIVATE
+        gpu_algobench_common
+)
+
 # ============================================================
 # Tests
 # ============================================================
@@ -219,20 +232,47 @@ target_link_libraries(validate_all
 if(BUILD_TESTS)
     enable_testing()
 
-    add_executable(test_foundation
-        tests/test_foundation.cpp
-    )
+    function(add_algobench_test test_name source_file)
+        add_executable(${test_name}
+            ${source_file}
+        )
 
-    target_link_libraries(test_foundation
-        PRIVATE
-            gpu_algobench_common
-    )
+        target_include_directories(${test_name}
+            PRIVATE
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests
+        )
 
-    add_test(
-        NAME foundation_smoke_test
-        COMMAND test_foundation
-    )
+        target_link_libraries(${test_name}
+            PRIVATE
+                gpu_algobench_common
+        )
+
+        add_test(
+            NAME ${test_name}
+            COMMAND ${test_name}
+        )
+    endfunction()
+
+    add_algobench_test(test_foundation tests/test_foundation.cpp)
+    add_algobench_test(test_polynomial tests/test_polynomial.cpp)
+    add_algobench_test(test_registry tests/test_registry.cpp)
+    add_algobench_test(test_cli tests/test_cli.cpp)
+    add_algobench_test(test_json_writer tests/test_json_writer.cpp)
+    add_algobench_test(test_random_utils tests/test_random_utils.cpp)
+    add_algobench_test(test_device_info tests/test_device_info.cpp)
 endif()
+
+# ============================================================
+# Convenience scripts
+# ============================================================
+
+# Keep the canonical script at the repository root, but also copy it to the
+# build directory so users can run it from either place.
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/execute_all_tests.bat
+    ${CMAKE_CURRENT_BINARY_DIR}/execute_all_tests.bat
+    COPYONLY
+)
 
 # ============================================================
 # Summary

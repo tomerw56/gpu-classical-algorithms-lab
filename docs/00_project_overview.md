@@ -37,6 +37,21 @@ Every benchmark should eventually have:
 - JSONL output.
 - A short Markdown explanation of strengths and pitfalls.
 
-## Phase 1 scope
+## Current foundation
 
-Phase 1 only builds the shared infrastructure. The actual algorithm demos are added in later phases.
+The current codebase contains the shared benchmark infrastructure, the `foundation_smoke` benchmark, and the first real algorithm benchmark: `polynomial_batch`.
+
+It also contains:
+
+- `cuda_probe` for CUDA runtime diagnostics.
+- `execute_all_tests.bat` for running the current test/benchmark suite with one command.
+
+## Current implemented benchmark
+
+`polynomial_batch` evaluates a degree-15 polynomial with 16 coefficients over many `x` values spaced by `100`. It has both CPU and CUDA implementations, tolerance-based validation, JSONL result metadata, and dedicated tests.
+
+See `docs/polynomial_batch.md` and `docs/phase_02_polynomial_batch.md`.
+
+## Test foundation
+
+The test suite covers the registry, CLI, JSON writer, random utilities, device info, foundation smoke benchmark semantics, and polynomial benchmark semantics.

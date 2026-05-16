@@ -45,8 +45,11 @@ std::vector<BenchmarkResult> run_foundation_smoke_gpu(const BenchmarkConfig& con
     result.preset = config.preset;
     result.repeat = config.repeat;
     result.warmup = config.warmup;
+    const std::int64_t n = values_for_preset(config.preset);
+    result.input_size["values"] = n;
     result.device = cuda_device_name();
     result.notes = "CUDA infrastructure smoke benchmark";
+    result.metadata["cuda_status"] = cuda_runtime_status();
 
     if (!cuda_runtime_available())
     {
@@ -54,9 +57,6 @@ std::vector<BenchmarkResult> run_foundation_smoke_gpu(const BenchmarkConfig& con
         result.metadata["status"] = "CUDA runtime unavailable";
         return {result};
     }
-
-    const std::int64_t n = values_for_preset(config.preset);
-    result.input_size["values"] = n;
 
     double* d_output = nullptr;
     const std::size_t bytes = static_cast<std::size_t>(n) * sizeof(double);
@@ -116,6 +116,7 @@ std::vector<BenchmarkResult> run_foundation_smoke_gpu(const BenchmarkConfig& con
     result.correct = std::abs(checksum - reference) <= tolerance;
     result.metadata["checksum"] = std::to_string(checksum);
     result.metadata["reference"] = std::to_string(reference);
+    result.metadata["checksum_policy"] = "final single output vector; not accumulated across repeats";
 
     CUDA_CHECK(cudaEventDestroy(start));
     CUDA_CHECK(cudaEventDestroy(stop));
