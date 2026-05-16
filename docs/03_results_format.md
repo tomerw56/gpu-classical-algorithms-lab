@@ -43,3 +43,20 @@ JSONL is convenient because it can be appended during long runs, parsed line-by-
 - `validation`: short description of the validator.
 
 These fields are useful when plotting performance while still preserving evidence that CPU and GPU variants computed the same logical benchmark.
+
+
+## Cost-matrix metadata
+
+`cost_matrix` adds benchmark-specific metadata:
+
+- `checksum`: sum of feasible final matrix costs.
+- `reference_checksum`: CPU-reference sum over feasible final matrix costs.
+- `feasible_count`: number of feasible final matrix cells.
+- `reference_feasible_count`: CPU-reference feasible-cell count.
+- `feasibility_mismatches`: count of GPU/CPU feasibility disagreements.
+- `max_abs_error`: largest cell-wise absolute cost error.
+- `max_rel_error`: largest cell-wise relative cost error.
+- `cost_model`: compact description of the branch-heavy scoring model.
+- `validation`: short description of the validator.
+
+These fields make it possible to compare performance while confirming that branch-heavy feasibility logic stayed semantically aligned between CPU and GPU.

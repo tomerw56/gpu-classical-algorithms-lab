@@ -12,6 +12,7 @@ CTest currently runs these executables:
 |---|---|
 | `test_foundation` | Checks `foundation_smoke` presets, CPU result metadata, correctness, and repeat/checksum policy. |
 | `test_polynomial` | Checks polynomial presets, 16-coefficient layout, stride-100 x policy, Horner correctness, benchmark metadata, and repeat/checksum policy. |
+| `test_cost_matrix` | Checks cost-matrix presets, deterministic task/resource generation, forced feasible/infeasible pairs, result metadata, and repeat/checksum policy. |
 | `test_registry` | Checks default benchmark registration, `all`, named benchmark execution, and unknown benchmark errors. |
 | `test_cli` | Checks command-line parsing, flags, repeated `--set`, and invalid argument handling. |
 | `test_json_writer` | Checks JSONL serialization, escaping, append/truncate behavior, and table printing. |
@@ -46,7 +47,7 @@ ctest --test-dir "<build-dir>" --output-on-failure --verbose
 
 ## Correctness policy covered by tests
 
-The foundation and polynomial tests verify that `--repeat` is a timing setting only. The reported checksum must describe the final single output vector, not the sum of all repeated executions.
+The foundation, polynomial, and cost-matrix tests verify that `--repeat` is a timing setting only. The reported checksum must describe the final single output vector, not the sum of all repeated executions.
 
 This matters because CPU and GPU benchmark rows must describe the same logical computation. Different checksum semantics would make them different benchmarks.
 
@@ -61,3 +62,8 @@ When the real algorithm benchmarks are added, each one should include:
 5. Benchmark-result metadata tests.
 
 For now, the local assertion helper is enough. Later, we can move to Catch2 or GoogleTest if the test suite grows significantly.
+
+
+## Exporter smoke coverage
+
+Phase 2.2 adds a small CTest entry named `export_cost_matrix_smoke`. It runs the CSV exporter on a `4 x 5` matrix and verifies through process success that the inspectable export path remains wired into the build.

@@ -2,7 +2,7 @@
 
 A C++/CUDA benchmark playground for testing where GPU acceleration helps classical algorithmic workloads: graph theory, constraint checking, cost matrices, spatial events, combinations, local search, and scenario simulation.
 
-This repository is currently in **Phase 2.0: the first real algorithm benchmark, `polynomial_batch`, on top of the Phase 1 infrastructure**.
+This repository is currently in **Phase 2.2: branch-heavy `cost_matrix` generation, after the Phase 2 polynomial benchmark and Phase 1 infrastructure**.
 
 The current codebase includes:
 
@@ -20,6 +20,8 @@ The current codebase includes:
 - `execute_all_tests.bat` to run the current test/benchmark suite from one command.
 - CTest coverage for the registry, CLI, JSONL writer, random utilities, device info, foundation benchmark semantics, and the polynomial benchmark.
 - `polynomial_batch`: degree-15 polynomial evaluation over many stride-100 `x` values, with CPU and CUDA implementations.
+- `cost_matrix`: branch-heavy task/resource feasibility and cost generation, with CPU and CUDA implementations.
+- `export_cost_matrix`: inspectable CSV exporter used by the Python matrix plotting utility.
 
 ## Build
 
@@ -80,11 +82,37 @@ Run the polynomial benchmark:
 build-cuda-ninja\gpu_algobench.exe --benchmark polynomial_batch --preset small --repeat 5 --warmup 1
 ```
 
+Run the cost-matrix benchmark:
+
+```bat
+build-cuda-ninja\gpu_algobench.exe --benchmark cost_matrix --preset small --repeat 5 --warmup 1
+```
+
+Export a small cost matrix for visual inspection:
+
+```bat
+build-cuda-ninja\export_cost_matrix.exe --preset tiny --output-dir results\cost_matrix_tiny
+```
+
+Plot the exported matrix as a cost heatmap, feasibility mask, and 3D surface:
+
+```bat
+python scripts\plot_cost_matrix.py --input-dir results\cost_matrix_tiny --show
+```
+
+For custom display sizes:
+
+```bat
+build-cuda-ninja\export_cost_matrix.exe --tasks 96 --resources 128 --output-dir results\cost_matrix_96x128
+python scripts\plot_cost_matrix.py --input-dir results\cost_matrix_96x128 --max-surface-dim 160
+```
+
 Write JSONL results:
 
 ```bat
 build-cuda-ninja\gpu_algobench.exe --benchmark foundation_smoke --preset small --repeat 5 --output results\smoke.jsonl
 build-cuda-ninja\gpu_algobench.exe --benchmark polynomial_batch --preset medium --repeat 5 --warmup 1 --output results\polynomial_medium.jsonl
+build-cuda-ninja\gpu_algobench.exe --benchmark cost_matrix --preset medium --repeat 3 --warmup 1 --output results\cost_matrix_medium.jsonl
 ```
 
 ## Execute all tests and current benchmarks
@@ -127,7 +155,7 @@ Each benchmark run emits one JSON object per line:
 {"benchmark":"foundation_smoke","variant":"cpu","preset":"small","repeat":5,"warmup":1,"input_size":{"values":1000000},"total_ms":3.4,"h2d_ms":0.0,"kernel_ms":0.0,"d2h_ms":0.0,"correct":true,"device":"CPU","notes":"infrastructure smoke benchmark"}
 ```
 
-A polynomial result also records benchmark-specific metadata such as `coefficient_count`, `x_step`, `x_cycle`, `checksum`, `reference_checksum`, `max_abs_error`, and `max_rel_error`.
+A polynomial result also records benchmark-specific metadata such as `coefficient_count`, `x_step`, `x_cycle`, `checksum`, `reference_checksum`, `max_abs_error`, and `max_rel_error`. A cost-matrix result records `feasible_count`, `reference_feasible_count`, `feasibility_mismatches`, `checksum`, `reference_checksum`, `max_abs_error`, and `max_rel_error`.
 
 Use JSONL because it is easy to append, diff, parse, and plot.
 
@@ -137,9 +165,9 @@ Use JSONL because it is easy to append, diff, parse, and plot.
 - Phase 1.1: repeatable Windows test runner and CUDA build fixes.
 - Phase 1.2: smoke-checksum correctness fix.
 - Phase 1.3: infrastructure tests.
-- Phase 2.0: polynomial batch evaluation.
-- Phase 2.1: complex cost matrix generation.
-- Phase 2.2: spatial event detection.
+- Phase 2.1: polynomial batch evaluation.
+- Phase 2.2: complex cost matrix generation.
+- Phase 2.3: spatial event detection.
 - Phase 3: graph BFS, connected components, weighted relaxation.
 - Phase 4: combinations, constraint network, local-search scoring, assignment preprocessing, scenario simulation.
 
@@ -161,16 +189,18 @@ Benchmark repeats are for timing only. Validation metadata such as `checksum` sh
 
 ## Current CTest suite
 
-The project currently builds seven dependency-free C++ test executables:
+The project currently builds eight dependency-free C++ test executables, plus one exporter smoke test registered directly with CTest:
 
 ```text
 test_foundation
 test_polynomial
+test_cost_matrix
 test_registry
 test_cli
 test_json_writer
 test_random_utils
 test_device_info
+export_cost_matrix_smoke
 ```
 
 Run them directly with:

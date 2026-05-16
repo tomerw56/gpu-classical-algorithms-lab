@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 
 project(gpu_classical_algorithms_lab
-    VERSION 0.2.0
+    VERSION 0.2.2
     DESCRIPTION "Classical algorithms CPU/GPU benchmark lab"
     LANGUAGES CXX
 )
@@ -99,12 +99,15 @@ set(GPUALGOBENCH_COMMON_SOURCES
 
     src/foundation/foundation_smoke_cpu.cpp
     src/polynomial/polynomial_batch_cpu.cpp
+    src/cost_matrix/cost_matrix_common.cpp
+    src/cost_matrix/cost_matrix_cpu.cpp
 )
 
 if(GPUALGOBENCH_HAS_CUDA)
     list(APPEND GPUALGOBENCH_COMMON_SOURCES
         src/foundation/foundation_smoke_gpu.cu
         src/polynomial/polynomial_batch_gpu.cu
+        src/cost_matrix/cost_matrix_gpu.cu
     )
 endif()
 
@@ -225,6 +228,15 @@ target_link_libraries(cuda_probe
         gpu_algobench_common
 )
 
+add_executable(export_cost_matrix
+    apps/export_cost_matrix.cpp
+)
+
+target_link_libraries(export_cost_matrix
+    PRIVATE
+        gpu_algobench_common
+)
+
 # ============================================================
 # Tests
 # ============================================================
@@ -255,6 +267,16 @@ if(BUILD_TESTS)
 
     add_algobench_test(test_foundation tests/test_foundation.cpp)
     add_algobench_test(test_polynomial tests/test_polynomial.cpp)
+    add_algobench_test(test_cost_matrix tests/test_cost_matrix.cpp)
+
+    add_test(
+        NAME export_cost_matrix_smoke
+        COMMAND export_cost_matrix
+            --tasks 4
+            --resources 5
+            --output-dir ${CMAKE_CURRENT_BINARY_DIR}/export_cost_matrix_smoke
+    )
+
     add_algobench_test(test_registry tests/test_registry.cpp)
     add_algobench_test(test_cli tests/test_cli.cpp)
     add_algobench_test(test_json_writer tests/test_json_writer.cpp)

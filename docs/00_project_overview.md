@@ -39,19 +39,26 @@ Every benchmark should eventually have:
 
 ## Current foundation
 
-The current codebase contains the shared benchmark infrastructure, the `foundation_smoke` benchmark, and the first real algorithm benchmark: `polynomial_batch`.
+The current codebase contains the shared benchmark infrastructure, the `foundation_smoke` benchmark, and two real algorithm benchmarks: `polynomial_batch` and `cost_matrix`.
 
 It also contains:
 
 - `cuda_probe` for CUDA runtime diagnostics.
 - `execute_all_tests.bat` for running the current test/benchmark suite with one command.
 
-## Current implemented benchmark
+## Current implemented benchmarks
 
 `polynomial_batch` evaluates a degree-15 polynomial with 16 coefficients over many `x` values spaced by `100`. It has both CPU and CUDA implementations, tolerance-based validation, JSONL result metadata, and dedicated tests.
 
-See `docs/polynomial_batch.md` and `docs/phase_02_polynomial_batch.md`.
+`cost_matrix` evaluates a branch-heavy task/resource matrix with compatibility checks, dispatch-radius rejection, lateness rejection, load penalties, urgency penalties, and a small zone-proxy penalty. It has both CPU and CUDA implementations, element-wise validation, JSONL result metadata, and dedicated tests.
+
+See:
+
+- `docs/polynomial_batch.md`
+- `docs/phase_02_polynomial_batch.md`
+- `docs/cost_matrix.md`
+- `docs/phase_02_cost_matrix.md`
 
 ## Test foundation
 
-The test suite covers the registry, CLI, JSON writer, random utilities, device info, foundation smoke benchmark semantics, and polynomial benchmark semantics.
+The test suite covers the registry, CLI, JSON writer, random utilities, device info, foundation smoke benchmark semantics, polynomial benchmark semantics, and cost-matrix benchmark semantics.
