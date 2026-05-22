@@ -1,9 +1,0 @@
-{
-  "bundle": "graph_foundation_demo",
-  "graphs": [
-    {"directory": "chain", "graph_type": "chain"},
-    {"directory": "grid", "graph_type": "grid"},
-    {"directory": "layered", "graph_type": "layered"},
-    {"directory": "random_sparse", "graph_type": "random_sparse"}
-  ]
-}

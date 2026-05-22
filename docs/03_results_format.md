@@ -105,6 +105,14 @@ speedup = CPU_ms_per_run / GPU_ms_per_run
 - `edge_count`, `min_out_degree`, `max_out_degree`, `mean_out_degree`, `zero_out_degree_count`: graph-summary fields.
 - `reached_count`: how many nodes were reachable from the source.
 - `max_distance`: largest discovered BFS distance.
+- `frontier_level_count`: number of reached BFS levels, usually `max_distance + 1`.
+- `max_frontier_size`: largest active node frontier in any BFS level.
+- `mean_frontier_size`: average active nodes per reached BFS level.
+- `reached_edge_visits`: outgoing edges incident to reached nodes; a proxy for top-down BFS edge-scanning work.
+- `max_frontier_edge_visits`: largest per-level outgoing-edge workload.
+- `mean_frontier_edge_visits`: average outgoing-edge work per BFS level. This is the most useful compact proxy for GPU work per synchronization point.
+- `mean_reached_out_degree`: average out-degree among reached nodes.
+- `frontier_width_to_depth`: rough width-vs-depth ratio, computed as `max_frontier_size / max_distance`.
 - `mismatch_count`: exact distance mismatches against the CPU reference.
 - `checksum` and `reference_checksum`: compact final-distance signatures.
 - `frontier_iterations`: GPU row only; number of BFS frontier rounds.
@@ -112,4 +120,4 @@ speedup = CPU_ms_per_run / GPU_ms_per_run
 - `kernel_ms_semantics`: GPU row only; explains that the timed region covers the traversal loop rather than a single isolated frontier kernel.
 - `validation`: short description of the distance validator.
 
-These fields are particularly important because BFS performance depends heavily on graph topology and frontier shape.
+These fields are particularly important because BFS performance depends heavily on graph topology and frontier shape. The shape-scaling plotter uses the frontier fields to show why very large random graphs can cross over while chain/grid cases stay CPU-favored.

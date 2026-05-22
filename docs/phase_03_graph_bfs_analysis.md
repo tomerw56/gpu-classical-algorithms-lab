@@ -71,7 +71,7 @@ The graph generators are not cosmetic. They intentionally stress different trave
 Use:
 
 ```bat
-execute_graph_bfs_shapes.bat
+execute_graph_bfs_all_sweeps_and_analyze.bat
 ```
 
 It executes:
@@ -120,7 +120,7 @@ This repository may later add an optimized GPU BFS variant. The current version 
 Phase 3.2.2 adds a layered-graph sweep so this discussion can be tested as a curve rather than only as `small` and `large` examples:
 
 ```bat
-execute_graph_bfs_scale_sweep.bat
+execute_graph_bfs_all_sweeps_and_analyze.bat
 python scripts\plot_graph_bfs_scaling.py --jsonl results\graph_bfs_layered_scale_sweep.jsonl --output-dir results\graph_bfs_layered_scale_plots --show
 ```
 
@@ -129,8 +129,36 @@ The plotter reports average milliseconds per BFS run and prints whether a GPU cr
 Phase 3.2.3 broadens the experiment from one graph shape to four. It sweeps `chain`, `grid`, `layered`, and `random` graph families across size ranges and plots speedup curves per anatomy:
 
 ```bat
-execute_graph_bfs_shape_scale_sweep.bat
+execute_graph_bfs_all_sweeps_and_analyze.bat
 python scripts\plot_graph_bfs_shape_scaling.py --jsonl results\graph_bfs_shape_scale_sweep.jsonl --output-dir results\graph_bfs_shape_scale_plots --show
 ```
 
 This is useful because node count alone does not explain BFS performance. Frontier width, traversal depth, and topology determine how much useful parallel work the GPU sees at each level. See `docs/phase_03_graph_bfs_shape_scaling.md` for the sweep design.
+
+## Follow-up: frontier-anatomy explanation
+
+Phase 3.2.4 adds frontier-anatomy metadata to `graph_bfs` and extends the shape-scaling plotter. The key new idea is to compare timing against useful work per BFS level:
+
+```text
+mean_frontier_edge_visits = reached_edge_visits / frontier_level_count
+```
+
+This explains the representative shape-scaling result:
+
+- chain graphs have huge depth and almost no per-level parallelism;
+- grids expose more work but still require many levels;
+- layered graphs approach parity only when very large;
+- random graphs can have low depth and large frontier bursts, which is why the GPU can cross over strongly.
+
+See `docs/phase_03_graph_bfs_frontier_anatomy.md` for the detailed table and the new plots.
+
+
+## Canonical BFS runner
+
+Use a single batch file for all BFS sweep, analysis, and plot generation:
+
+```bat
+execute_graph_bfs_all_sweeps_and_analyze.bat
+```
+
+This script is self-contained. It runs the layered-only sweep, the chain/grid/layered/random shape × scale sweep, the JSONL analyzer, and both plotters. Older split `execute_graph_bfs*.bat` wrappers were retired to avoid duplicated logic and batch-label errors.

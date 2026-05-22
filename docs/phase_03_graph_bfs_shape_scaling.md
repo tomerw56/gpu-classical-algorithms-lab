@@ -32,7 +32,7 @@ The sweep is deliberately not trying to make all graphs identical. Instead, it s
 From the repository root:
 
 ```bat
-execute_graph_bfs_shape_scale_sweep.bat
+execute_graph_bfs_all_sweeps_and_analyze.bat
 ```
 
 The script writes:
@@ -132,6 +132,10 @@ graph_bfs_shape_scaling_summary.csv
 graph_bfs_shape_scaling_speedup.png
 graph_bfs_shape_scaling_cpu_times.png
 graph_bfs_shape_scaling_gpu_times.png
+graph_bfs_shape_scaling_depth.png
+graph_bfs_shape_scaling_max_frontier.png
+graph_bfs_shape_scaling_mean_edges_per_level.png
+graph_bfs_speedup_vs_frontier_work.png
 ```
 
 ## Timing normalization
@@ -158,11 +162,14 @@ speedup > 1.0  -> GPU is faster
 
 ## What to look for
 
-The most informative figure is:
+The two most informative figures are:
 
 ```text
 graph_bfs_shape_scaling_speedup.png
+graph_bfs_speedup_vs_frontier_work.png
 ```
+
+The first shows whether CPU or GPU wins as each graph family grows. The second explains the trend by plotting speedup against mean outgoing edge visits per BFS level, which is a proxy for useful GPU work per level-synchronous traversal round.
 
 Use it to compare the four graph families:
 
@@ -171,7 +178,7 @@ Use it to compare the four graph families:
 - `layered` should be one of the best shapes for the current GPU BFS.
 - `random` may become interesting because a low-diameter topology can create large frontier bursts.
 
-The script also prints a per-shape crossover summary:
+The script also prints a per-shape crossover summary, now including depth and max frontier size at the best/crossover point:
 
 ```text
 kind       first crossover / best observed speedup
@@ -188,3 +195,51 @@ This sweep is one of the clearest demonstrations in the repository that algorith
 ```
 
 The shape of the graph controls how much useful parallel work is exposed at each step. That is why a GPU can look very poor on a chain and far more competitive on a wide or low-diameter graph, even when the total node count is similar.
+
+
+## Frontier-anatomy metrics
+
+`graph_bfs` now emits frontier-anatomy metadata for both CPU and GPU rows:
+
+```text
+frontier_level_count
+max_frontier_size
+mean_frontier_size
+reached_edge_visits
+max_frontier_edge_visits
+mean_frontier_edge_visits
+mean_reached_out_degree
+frontier_width_to_depth
+```
+
+These are computed from the CPU reference distance vector and explain why the shape sweep behaves the way it does. For example, a chain can be very large but still have `max_frontier_size = 1`, while a low-diameter random graph can create a huge frontier burst.
+
+See `phase_03_graph_bfs_frontier_anatomy.md` for the detailed interpretation and representative development-machine results.
+
+
+## Single BFS runner
+
+The old split BFS sweep scripts were retired. Use one command for both the layered-only sweep and the chain/grid/layered/random shape × scale sweep:
+
+```bat
+execute_graph_bfs_all_sweeps_and_analyze.bat
+```
+
+The script writes two JSONL files:
+
+```text
+results\graph_bfs_layered_scale_sweep.jsonl
+results\graph_bfs_shape_scale_sweep.jsonl
+```
+
+The second file is the one used for graph-anatomy comparison because it contains all four graph families: chain, grid, layered, and random.
+
+## Canonical BFS runner
+
+Use a single batch file for all BFS sweep, analysis, and plot generation:
+
+```bat
+execute_graph_bfs_all_sweeps_and_analyze.bat
+```
+
+This script is self-contained. It runs the layered-only sweep, the chain/grid/layered/random shape × scale sweep, the JSONL analyzer, and both plotters. Older split `execute_graph_bfs*.bat` wrappers were retired to avoid duplicated logic and batch-label errors.

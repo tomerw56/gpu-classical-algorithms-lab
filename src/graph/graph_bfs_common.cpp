@@ -245,6 +245,51 @@ BfsValidationSummary validate_bfs_distances(const graph::CsrGraph& graph,
         }
     }
 
+    if (summary.reached_count > 0)
+    {
+        summary.frontier_level_count = summary.max_distance + 1;
+        std::vector<std::int64_t> frontier_sizes(static_cast<std::size_t>(summary.frontier_level_count), 0);
+        std::vector<std::int64_t> frontier_edge_visits(static_cast<std::size_t>(summary.frontier_level_count), 0);
+
+        for (std::int32_t node = 0; node < graph.node_count; ++node)
+        {
+            const auto distance = reference[static_cast<std::size_t>(node)];
+            if (distance == kUnreachedDistance)
+            {
+                continue;
+            }
+
+            const auto node_index = static_cast<std::size_t>(node);
+            const auto level_index = static_cast<std::size_t>(distance);
+            const auto out_degree = graph.row_offsets[node_index + 1] - graph.row_offsets[node_index];
+
+            ++frontier_sizes[level_index];
+            frontier_edge_visits[level_index] += out_degree;
+            summary.reached_edge_visits += out_degree;
+        }
+
+        for (std::int32_t level = 0; level < summary.frontier_level_count; ++level)
+        {
+            const auto level_index = static_cast<std::size_t>(level);
+            summary.max_frontier_size = std::max(summary.max_frontier_size, frontier_sizes[level_index]);
+            summary.max_frontier_edge_visits =
+                std::max(summary.max_frontier_edge_visits, frontier_edge_visits[level_index]);
+        }
+
+        summary.mean_frontier_size =
+            static_cast<double>(summary.reached_count) / static_cast<double>(summary.frontier_level_count);
+        summary.mean_frontier_edge_visits =
+            static_cast<double>(summary.reached_edge_visits) / static_cast<double>(summary.frontier_level_count);
+        summary.mean_reached_out_degree =
+            static_cast<double>(summary.reached_edge_visits) / static_cast<double>(summary.reached_count);
+
+        if (summary.max_distance > 0)
+        {
+            summary.frontier_width_to_depth =
+                static_cast<double>(summary.max_frontier_size) / static_cast<double>(summary.max_distance);
+        }
+    }
+
     return summary;
 }
 

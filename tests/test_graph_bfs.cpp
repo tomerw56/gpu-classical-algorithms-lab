@@ -44,6 +44,21 @@ int main()
         TEST_CHECK(summary.correct);
         TEST_CHECK_EQ(summary.reached_count, static_cast<std::int64_t>(2));
         TEST_CHECK_EQ(summary.mismatch_count, static_cast<std::int64_t>(0));
+        TEST_CHECK_EQ(summary.frontier_level_count, static_cast<std::int32_t>(2));
+        TEST_CHECK_EQ(summary.max_frontier_size, static_cast<std::int64_t>(1));
+        TEST_CHECK_EQ(summary.reached_edge_visits, static_cast<std::int64_t>(1));
+    }
+
+
+    {
+        const auto graph = algobench::graph::make_chain_graph(5, true);
+        const auto distances = bfs_cpu_reference(graph, 0);
+        const auto summary = validate_bfs_distances(graph, 0, distances);
+        TEST_CHECK(summary.correct);
+        TEST_CHECK_EQ(summary.frontier_level_count, static_cast<std::int32_t>(5));
+        TEST_CHECK_EQ(summary.max_frontier_size, static_cast<std::int64_t>(1));
+        TEST_CHECK(summary.mean_frontier_size > 0.99);
+        TEST_CHECK(summary.frontier_width_to_depth < 1.0);
     }
 
     {
@@ -63,6 +78,8 @@ int main()
         TEST_CHECK_EQ(results.front().input_size.at("nodes"), static_cast<std::int64_t>(32));
         TEST_CHECK_EQ(results.front().metadata.at("graph_kind"), std::string("chain"));
         TEST_CHECK_EQ(results.front().metadata.at("mismatch_count"), std::string("0"));
+        TEST_CHECK(results.front().metadata.find("max_frontier_size") != results.front().metadata.end());
+        TEST_CHECK(results.front().metadata.find("mean_frontier_edge_visits") != results.front().metadata.end());
     }
 
     {

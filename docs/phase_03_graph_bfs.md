@@ -113,7 +113,7 @@ For this benchmark, `kernel_ms` should be read as the timed GPU traversal-loop r
 Run:
 
 ```bat
-execute_graph_bfs_shapes.bat
+execute_graph_bfs_all_sweeps_and_analyze.bat
 ```
 
 It evaluates `chain`, `grid`, `layered`, and `random` graph shapes and writes:

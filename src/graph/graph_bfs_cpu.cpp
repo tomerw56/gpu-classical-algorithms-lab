@@ -28,6 +28,14 @@ void fill_metadata(BenchmarkResult& result,
     result.metadata["zero_out_degree_count"] = std::to_string(stats.zero_out_degree_count);
     result.metadata["reached_count"] = std::to_string(validation.reached_count);
     result.metadata["max_distance"] = std::to_string(validation.max_distance);
+    result.metadata["frontier_level_count"] = std::to_string(validation.frontier_level_count);
+    result.metadata["max_frontier_size"] = std::to_string(validation.max_frontier_size);
+    result.metadata["mean_frontier_size"] = std::to_string(validation.mean_frontier_size);
+    result.metadata["reached_edge_visits"] = std::to_string(validation.reached_edge_visits);
+    result.metadata["max_frontier_edge_visits"] = std::to_string(validation.max_frontier_edge_visits);
+    result.metadata["mean_frontier_edge_visits"] = std::to_string(validation.mean_frontier_edge_visits);
+    result.metadata["mean_reached_out_degree"] = std::to_string(validation.mean_reached_out_degree);
+    result.metadata["frontier_width_to_depth"] = std::to_string(validation.frontier_width_to_depth);
     result.metadata["mismatch_count"] = std::to_string(validation.mismatch_count);
     result.metadata["checksum"] = std::to_string(validation.checksum);
     result.metadata["reference_checksum"] = std::to_string(validation.reference_checksum);

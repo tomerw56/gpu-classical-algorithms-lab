@@ -44,7 +44,18 @@ struct GraphBfsShape
     std::uint32_t random_seed = 0xC001CAFEu;
 };
 
-/** High-level validation/summary information for a BFS distance vector. */
+/**
+ * High-level validation/summary information for a BFS distance vector.
+ *
+ * The frontier fields are computed from the CPU reference distance vector.
+ * They explain why the same BFS implementation can behave very differently
+ * across graph anatomies:
+ *
+ * - chain graphs have huge depth but max_frontier_size ~= 1
+ * - grids have many levels but only moderate wavefronts
+ * - layered/random graphs can expose large frontiers and more useful work
+ *   per synchronization point
+ */
 struct BfsValidationSummary
 {
     bool correct = true;
@@ -53,6 +64,21 @@ struct BfsValidationSummary
     std::int32_t max_distance = 0;
     std::int64_t checksum = 0;
     std::int64_t reference_checksum = 0;
+
+    // Frontier/profile metrics derived from the reference BFS tree.
+    std::int32_t frontier_level_count = 0;
+    std::int64_t max_frontier_size = 0;
+    double mean_frontier_size = 0.0;
+
+    // Sum of outgoing edges incident to reached nodes. This approximates the
+    // amount of edge-scanning work performed by a top-down BFS traversal.
+    std::int64_t reached_edge_visits = 0;
+    std::int64_t max_frontier_edge_visits = 0;
+    double mean_frontier_edge_visits = 0.0;
+
+    // Useful compact ratios for plots and documentation.
+    double mean_reached_out_degree = 0.0;
+    double frontier_width_to_depth = 0.0;
 };
 
 /** Resolve benchmark preset + optional --set graph=... overrides into a graph shape. */

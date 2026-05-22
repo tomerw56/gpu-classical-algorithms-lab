@@ -68,7 +68,7 @@ The default graph kind is `layered` because it produces wide frontiers and makes
 Run:
 
 ```bat
-execute_graph_bfs_shapes.bat
+execute_graph_bfs_all_sweeps_and_analyze.bat
 ```
 
 This executes `chain`, `grid`, `layered`, and `random` graph cases and writes:
@@ -84,7 +84,7 @@ The script defaults to `small` so the intentionally GPU-hostile chain case remai
 To study how the CPU/GPU relationship changes from tiny to very large layered graphs, run:
 
 ```bat
-execute_graph_bfs_scale_sweep.bat
+execute_graph_bfs_all_sweeps_and_analyze.bat
 ```
 
 Then plot the result:
@@ -105,7 +105,7 @@ See `docs/phase_03_graph_bfs_scaling.md` for the exact scale points and interpre
 To compare whether the GPU behaves differently on chain, grid, layered, and random graphs as each family grows, run:
 
 ```bat
-execute_graph_bfs_shape_scale_sweep.bat
+execute_graph_bfs_all_sweeps_and_analyze.bat
 ```
 
 Then plot:
@@ -117,9 +117,9 @@ python scripts\plot_graph_bfs_shape_scaling.py ^
   --show
 ```
 
-This writes per-shape speedup, CPU-time, and GPU-time plots. It is the clearest way to see that graph **anatomy**, not only node count, changes how the current GPU BFS behaves.
+This writes per-shape speedup, CPU-time, GPU-time, and frontier-anatomy plots. It is the clearest way to see that graph **anatomy**, not only node count, changes how the current GPU BFS behaves.
 
-See `docs/phase_03_graph_bfs_shape_scaling.md` for the exact sweep points and interpretation.
+See `docs/phase_03_graph_bfs_shape_scaling.md` for the exact sweep points and interpretation, and `docs/phase_03_graph_bfs_frontier_anatomy.md` for the frontier-width/depth explanation.
 
 ## Example commands
 
@@ -199,12 +199,22 @@ source
 edge_count
 reached_count
 max_distance
+frontier_level_count
+max_frontier_size
+mean_frontier_size
+reached_edge_visits
+max_frontier_edge_visits
+mean_frontier_edge_visits
+mean_reached_out_degree
+frontier_width_to_depth
 mismatch_count
 checksum
 reference_checksum
 frontier_iterations   # GPU row only
 kernel_ms_semantics    # GPU row only
 ```
+
+The frontier metrics are computed from the CPU reference BFS tree and are written for both CPU and GPU rows. They explain *why* the timing curves differ by graph anatomy.
 
 ## Strengths
 
@@ -241,9 +251,20 @@ This benchmark is meant to show that “graph algorithm on GPU” is not one cat
 chain   -> CPU should usually be better
 grid    -> mixed result
 layered -> friendliest case for this initial GPU BFS, but not guaranteed to win
-random  -> depends on topology and degree distribution
+random  -> depends on topology and degree distribution; low-depth random graphs may expose enough frontier work for the GPU to win
 ```
 
 ## Shape × scale sweep labels
 
-`execute_graph_bfs_shape_scale_sweep.bat` uses explicit `--set` graph dimensions, so its `--preset tiny` argument is only a neutral fallback before those dimensions override the actual graph size. The runner passes a `sweep_label` such as `grid_256x256` or `layered_64x4096`; `graph_bfs` displays that label in the result-table `preset` column and writes it to JSONL through the ordinary `preset` field. This keeps the console output readable while the plotter still groups rows by concrete node/edge counts and graph-shape metadata.
+`execute_graph_bfs_all_sweeps_and_analyze.bat` uses explicit `--set` graph dimensions, so its `--preset tiny` argument is only a neutral fallback before those dimensions override the actual graph size. The runner passes a `sweep_label` such as `grid_256x256` or `layered_64x4096`; `graph_bfs` displays that label in the result-table `preset` column and writes it to JSONL through the ordinary `preset` field. This keeps the console output readable while the plotter still groups rows by concrete node/edge counts and graph-shape metadata.
+
+
+## Canonical BFS runner
+
+Use a single batch file for all BFS sweep, analysis, and plot generation:
+
+```bat
+execute_graph_bfs_all_sweeps_and_analyze.bat
+```
+
+This script is self-contained. It runs the layered-only sweep, the chain/grid/layered/random shape × scale sweep, the JSONL analyzer, and both plotters. Older split `execute_graph_bfs*.bat` wrappers were retired to avoid duplicated logic and batch-label errors.

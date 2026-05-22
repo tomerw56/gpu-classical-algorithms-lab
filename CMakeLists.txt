@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 
 project(gpu_classical_algorithms_lab
-    VERSION 0.3.2.3
+    VERSION 0.3.2.4
     DESCRIPTION "Classical algorithms CPU/GPU benchmark lab"
     LANGUAGES CXX
 )
@@ -347,20 +347,8 @@ configure_file(
 )
 
 configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/execute_graph_bfs_shapes.bat
-    ${CMAKE_CURRENT_BINARY_DIR}/execute_graph_bfs_shapes.bat
-    COPYONLY
-)
-
-configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/execute_graph_bfs_scale_sweep.bat
-    ${CMAKE_CURRENT_BINARY_DIR}/execute_graph_bfs_scale_sweep.bat
-    COPYONLY
-)
-
-configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/execute_graph_bfs_shape_scale_sweep.bat
-    ${CMAKE_CURRENT_BINARY_DIR}/execute_graph_bfs_shape_scale_sweep.bat
+    ${CMAKE_CURRENT_SOURCE_DIR}/execute_graph_bfs_all_sweeps_and_analyze.bat
+    ${CMAKE_CURRENT_BINARY_DIR}/execute_graph_bfs_all_sweeps_and_analyze.bat
     COPYONLY
 )
 

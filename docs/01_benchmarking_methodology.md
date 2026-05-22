@@ -33,7 +33,7 @@ CUDA benchmarks should report:
 For many dense examples, the compute-region time is effectively kernel time. Some algorithms need a broader interpretation. `graph_bfs`, for example, reports `kernel_ms` as the timed traversal-loop region because BFS advances through many frontier levels rather than one isolated kernel launch.
 
 When plotting repeated benchmark rows, prefer a per-run metric such as `total_ms / repeat`. The graph-BFS scale-sweep plotter performs that normalization automatically so a five-repeat sweep is shown as average milliseconds per BFS run rather than accumulated five-run time.
-The graph-shape × scale BFS plotter uses the same normalization and groups rows by `graph_kind`, which makes it possible to compare topology as well as size.
+The graph-shape × scale BFS plotter uses the same normalization and groups rows by `graph_kind`, which makes it possible to compare topology as well as size. It also reads frontier-anatomy metadata such as `max_frontier_size`, `max_distance`, and `mean_frontier_edge_visits` so timing results can be interpreted rather than merely reported.
 
 This split is important because a GPU compute region can look impressive while end-to-end performance is worse than CPU due to transfer overhead, synchronization, or orchestration cost.
 
@@ -68,6 +68,7 @@ Use presets:
 - Speedup ratio.
 - Break-even point.
 - Transfer overhead percentage.
+- For graph traversal: depth, frontier width, and useful work per traversal level.
 
 ## Test coverage
 

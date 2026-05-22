@@ -2,7 +2,7 @@
 
 A C++/CUDA benchmark playground for testing where GPU acceleration helps classical algorithmic workloads: graph theory, constraint checking, cost matrices, spatial events, combinations, local search, and scenario simulation.
 
-This repository is currently in **Phase 3.2.2: BFS layered scale-sweep and crossover plotting support**, after the Phase 1 infrastructure and the three Phase 2 CPU/GPU pairwise/data-parallel benchmarks.
+This repository is currently in **Phase 3.2.8: single graph-BFS sweep runner**, after the Phase 1 infrastructure and the three Phase 2 CPU/GPU pairwise/data-parallel benchmarks.
 
 The current codebase includes:
 
@@ -18,9 +18,39 @@ The current codebase includes:
 - A small `foundation_smoke` benchmark to verify the infrastructure.
 - `cuda_probe` diagnostic executable.
 - `execute_all_tests.bat` to run the current test/benchmark suite from one command.
-- `execute_graph_bfs_shapes.bat` to reproduce the chain/grid/layered/random BFS comparison.
-- `execute_graph_bfs_scale_sweep.bat` to run a layered BFS scaling study from tiny to very large graphs.
-- `execute_graph_bfs_shape_scale_sweep.bat` to compare BFS scaling across chain, grid, layered, and random graph anatomy.
+- `execute_graph_bfs_all_sweeps_and_analyze.bat`, the single canonical BFS sweep/analyze/plot runner. It runs both the layered scale study and the chain/grid/layered/random shape × scale study.
+
+### Graph BFS sweep/analyze/plot flow
+
+For all BFS scaling work, use the single canonical runner:
+
+```bat
+execute_graph_bfs_all_sweeps_and_analyze.bat
+```
+
+It generates both JSONL files:
+
+```text
+results\graph_bfs_layered_scale_sweep.jsonl
+results\graph_bfs_shape_scale_sweep.jsonl
+```
+
+Then it analyzes both files and writes both plot sets. The shape × scale file is the one that includes all graph anatomies:
+
+```text
+chain, grid, layered, random
+```
+
+If a BFS anatomy plot looks empty or suspicious, rerun the same script. It runs the analyzer automatically and writes reports under:
+
+```text
+results\graph_bfs_layered_scale_analysis\
+results\graph_bfs_shape_scale_analysis\
+```
+
+Older split BFS batch wrappers were intentionally retired so there is only one batch command to remember.
+
+- Frontier-anatomy BFS metadata and plots: depth, max frontier size, mean edge work per BFS level, and speedup versus frontier work.
 - CTest coverage for the registry, CLI, JSONL writer, random utilities, device info, foundation benchmark semantics, polynomial, cost-matrix, spatial-event, graph-foundation, and graph-BFS semantics.
 - `polynomial_batch`: degree-15 polynomial evaluation over many stride-100 `x` values, with CPU and CUDA implementations.
 - `cost_matrix`: branch-heavy task/resource feasibility and cost generation, with CPU and CUDA implementations.
@@ -30,6 +60,11 @@ The current codebase includes:
 - `export_graph_foundation`: inspectable multi-graph CSR exporter used by the Python graph-foundation plotting utility.
 - Graph foundation utilities: deterministic CSR construction plus chain, grid, layered, and sparse graph generators.
 - `graph_bfs`: CPU queue BFS versus CUDA frontier BFS over the generated CSR graph shapes.
+
+
+#### Note on BFS anatomy plots and older JSONL files
+
+`plot_graph_bfs_shape_scaling.py` supports both new and older BFS sweep files. Newer runs contain exact frontier-anatomy metadata such as `mean_frontier_edge_visits`. Older runs may not. In that case, the plotter derives fallback estimates from `max_distance`, `reached_count`, and `mean_out_degree` so the “useful work per synchronization point” plot is still meaningful. Exact max-frontier plots are skipped when the required exact data is unavailable.
 
 ## Build
 
@@ -101,72 +136,42 @@ build-cuda-ninja\gpu_algobench.exe --benchmark graph_bfs --preset small --repeat
 build-cuda-ninja\gpu_algobench.exe --benchmark graph_bfs --preset small --repeat 5 --warmup 1 --set graph=random
 ```
 
-Or run the dedicated shape-comparison batch:
+Run all BFS scale/anatomy experiments, analysis, and plots using the single BFS runner:
 
 ```bat
-execute_graph_bfs_shapes.bat
+execute_graph_bfs_all_sweeps_and_analyze.bat
 ```
 
-It writes:
+The script writes:
 
 ```text
-results\graph_bfs_shape_comparison.jsonl
+results\graph_bfs_layered_scale_sweep.jsonl
+results\graph_bfs_shape_scale_sweep.jsonl
+results\graph_bfs_layered_scale_analysis\
+results\graph_bfs_shape_scale_analysis\
+results\graph_bfs_layered_scale_plots\
+results\graph_bfs_shape_scale_plots\
 ```
 
-Run the layered BFS scaling sweep:
-
-```bat
-execute_graph_bfs_scale_sweep.bat
-```
-
-Then generate crossover plots and a CSV summary:
-
-```bat
-python scripts\plot_graph_bfs_scaling.py --jsonl results\graph_bfs_layered_scale_sweep.jsonl --output-dir results\graph_bfs_layered_scale_plots --show
-```
-
-This writes:
+The shape-scale JSONL and plots include:
 
 ```text
-graph_bfs_scaling_summary.csv
-graph_bfs_scaling_times.png
-graph_bfs_scaling_speedup.png
+chain
+grid
+layered
+random
 ```
 
-The plotter divides `total_ms` by the benchmark `repeat` count so the figures show **average milliseconds per BFS run**. See `docs/phase_03_graph_bfs_scaling.md` for the sweep design and crossover interpretation.
-
-Run the graph-shape × scale BFS sweep:
+Important switches are at the top of `execute_graph_bfs_all_sweeps_and_analyze.bat`:
 
 ```bat
-execute_graph_bfs_shape_scale_sweep.bat
-```
-
-The runner has a top-level switch:
-
-```bat
+set "RUN_LAYERED_SWEEP=1"
+set "RUN_SHAPE_SCALE_SWEEP=1"
+set "INCLUDE_VERY_LARGE=1"
 set "INCLUDE_HEAVY_CASES=0"
 ```
 
-With `0`, the default sweep still runs **multiple non-tiny sizes** for every graph family. The flag only suppresses the extra longest-running stress points. Set it to `1` when you want to append the optional heavy chain/grid/layered/random cases.
-
-Internally the script uses `--preset tiny` only as a neutral base before explicit `--set` graph dimensions override the real size. The benchmark table now displays sweep labels such as `chain_4096`, `grid_256x256`, and `layered_64x4096` in the `preset` column so it is obvious which scale point is executing.
-
-Then generate per-shape speedup/time plots:
-
-```bat
-python scripts\plot_graph_bfs_shape_scaling.py --jsonl results\graph_bfs_shape_scale_sweep.jsonl --output-dir results\graph_bfs_shape_scale_plots --show
-```
-
-This writes:
-
-```text
-graph_bfs_shape_scaling_summary.csv
-graph_bfs_shape_scaling_speedup.png
-graph_bfs_shape_scaling_cpu_times.png
-graph_bfs_shape_scaling_gpu_times.png
-```
-
-See `docs/phase_03_graph_bfs_shape_scaling.md` for the anatomy-aware sweep design.
+`INCLUDE_HEAVY_CASES=0` still runs every graph family. It only skips the largest stress cases. Set it to `1` when you want the full heavy chain/grid/layered/random sweep.
 
 Run the polynomial benchmark:
 
@@ -364,3 +369,29 @@ execute_all_tests.bat
 ```
 
 See `docs/phase_01_tests.md` for details.
+
+
+## Full Graph BFS sweep flow
+
+The only supported BFS batch runner is:
+
+```bat
+execute_graph_bfs_all_sweeps_and_analyze.bat
+```
+
+It is self-contained: it does not call any other `execute_graph_bfs*.bat` file. It runs the layered-only scale sweep, the chain/grid/layered/random shape × scale sweep, the JSONL analyzer, and the plotting scripts.
+
+The old split BFS batch files were removed to avoid label/subroutine bugs and command confusion.
+
+Important variables at the top of the script:
+
+```bat
+set "RUN_LAYERED_SWEEP=1"
+set "RUN_SHAPE_SCALE_SWEEP=1"
+set "RUN_ANALYSIS=1"
+set "RUN_PLOTS=1"
+set "INCLUDE_VERY_LARGE=1"
+set "INCLUDE_HEAVY_CASES=0"
+```
+
+`INCLUDE_HEAVY_CASES=0` does **not** remove chain/grid/layered/random. It only skips the largest stress cases, such as `random_1048576`. Set it to `1` when you want the full heavy shape sweep.

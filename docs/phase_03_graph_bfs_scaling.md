@@ -13,7 +13,7 @@ The default sweep focuses on the **layered graph** because it is the most GPU-fr
 From the repository root:
 
 ```bat
-execute_graph_bfs_scale_sweep.bat
+execute_graph_bfs_all_sweeps_and_analyze.bat
 ```
 
 The script writes:
@@ -115,3 +115,14 @@ This sweep turns a single anecdotal result into a curve. It helps answer questio
 - Would an optimized GPU BFS variant be worth implementing next?
 
 That is exactly the kind of evidence this repository is intended to produce.
+
+
+## Canonical BFS runner
+
+Use a single batch file for all BFS sweep, analysis, and plot generation:
+
+```bat
+execute_graph_bfs_all_sweeps_and_analyze.bat
+```
+
+This script is self-contained. It runs the layered-only sweep, the chain/grid/layered/random shape × scale sweep, the JSONL analyzer, and both plotters. Older split `execute_graph_bfs*.bat` wrappers were retired to avoid duplicated logic and batch-label errors.
