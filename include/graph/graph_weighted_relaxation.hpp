@@ -48,6 +48,10 @@ struct WeightedRelaxationShape
     std::int32_t random_out_degree = 0;
     std::uint32_t random_seed = 0xA11CEu;
 
+    // Delta used by the experimental GPU delta-stepping variant.
+    // A larger value creates fewer buckets but more work inside each bucket.
+    std::int32_t delta = 16;
+
     // GPU convergence guard. Zero means choose a graph-family default.
     std::int32_t max_iterations = 0;
 };

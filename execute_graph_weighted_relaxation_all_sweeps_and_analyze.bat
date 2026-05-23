@@ -17,6 +17,7 @@ set "BUILD_DIR=build-cuda-ninja"
 set "RUN_SWEEP=1"
 set "RUN_ANALYSIS=1"
 set "RUN_PLOTS=1"
+set "RUN_DELTA_TUNING=1"
 set "PLOT_SHOW=0"
 
 set "WR_REPEAT=3"
@@ -28,11 +29,21 @@ REM 1 adds the largest stress points. Be careful: chain/grid weighted relaxation
 REM can need many iterations in the naive GPU algorithm.
 set "INCLUDE_HEAVY_CASES=0"
 
+REM Adds an explicit very-very-large random graph point to make the random-graph
+REM conclusion clear. This is separate from INCLUDE_HEAVY_CASES because random
+REM is the family where GPU global scan is expected to win decisively.
+REM Keep the repeat lower for this stress point so the full flow remains usable.
+set "INCLUDE_VERY_VERY_LARGE_RANDOM=1"
+set "VERY_VERY_LARGE_RANDOM_NODES=1048576"
+set "VERY_VERY_LARGE_RANDOM_REPEAT=1"
+
 set "RESULTS_DIR=results"
 set "WR_RESULTS_FILE=graph_weighted_relaxation_shape_scale_sweep.jsonl"
 set "WR_ANALYSIS_DIR=graph_weighted_relaxation_shape_scale_analysis"
 set "WR_PLOTS_DIR=graph_weighted_relaxation_shape_scale_plots"
 set "WR_RECOMMENDATION_DIR=graph_weighted_relaxation_backend_recommendations"
+set "WR_DELTA_TUNING_FILE=graph_weighted_relaxation_delta_tuning.jsonl"
+set "WR_DELTA_TUNING_PLOTS_DIR=graph_weighted_relaxation_delta_tuning_plots"
 
 REM Random graph defaults.
 set "RANDOM_OUT_DEGREE=8"
@@ -61,6 +72,9 @@ set "WR_PLOTS_PATH=%PROJECT_DIR%\%RESULTS_DIR%\%WR_PLOTS_DIR%"
 set "ANALYZE_SCRIPT=%PROJECT_DIR%\scripts\analyze_graph_weighted_relaxation_jsonl.py"
 set "PLOT_SCRIPT=%PROJECT_DIR%\scripts\plot_graph_weighted_relaxation_scaling.py"
 set "RECOMMEND_SCRIPT=%PROJECT_DIR%\scripts\recommend_graph_weighted_relaxation_backend.py"
+set "DELTA_TUNING_PLOT_SCRIPT=%PROJECT_DIR%\scripts\plot_graph_weighted_delta_tuning.py"
+set "WR_DELTA_TUNING_JSONL=%PROJECT_DIR%\%RESULTS_DIR%\%WR_DELTA_TUNING_FILE%"
+set "WR_DELTA_TUNING_PLOTS_PATH=%PROJECT_DIR%\%RESULTS_DIR%\%WR_DELTA_TUNING_PLOTS_DIR%"
 
 if not exist "%GPU_ALGOBENCH%" (
     echo ERROR: gpu_algobench.exe was not found:
@@ -88,12 +102,19 @@ if not exist "%RECOMMEND_SCRIPT%" (
     exit /b 1
 )
 
+if not exist "%DELTA_TUNING_PLOT_SCRIPT%" (
+    echo ERROR: delta tuning plot script was not found:
+    echo   %DELTA_TUNING_PLOT_SCRIPT%
+    exit /b 1
+)
+
 if not exist "%PROJECT_DIR%\%RESULTS_DIR%" (
     mkdir "%PROJECT_DIR%\%RESULTS_DIR%" >nul 2>nul
 )
 
 if "%OVERWRITE_RESULTS%"=="1" (
     if exist "%WR_JSONL%" del "%WR_JSONL%"
+    if exist "%WR_DELTA_TUNING_JSONL%" del "%WR_DELTA_TUNING_JSONL%"
 )
 
 set "PLOT_SHOW_ARG="
@@ -178,6 +199,11 @@ if "%RUN_SWEEP%"=="1" (
         "%GPU_ALGOBENCH%" --benchmark graph_weighted_relaxation --preset tiny --repeat %WR_REPEAT% --warmup %WR_WARMUP% --set graph=random --set random_nodes=262144 --set random_out_degree=%RANDOM_OUT_DEGREE% --set seed=%RANDOM_SEED% --set sweep_label=random_262144_d%RANDOM_OUT_DEGREE% --output "%WR_JSONL%"
         if errorlevel 1 exit /b 1
     )
+    if "%INCLUDE_VERY_VERY_LARGE_RANDOM%"=="1" (
+        echo --- random very very large ---
+        "%GPU_ALGOBENCH%" --benchmark graph_weighted_relaxation --preset tiny --repeat %VERY_VERY_LARGE_RANDOM_REPEAT% --warmup %WR_WARMUP% --set graph=random --set random_nodes=%VERY_VERY_LARGE_RANDOM_NODES% --set random_out_degree=%RANDOM_OUT_DEGREE% --set seed=%RANDOM_SEED% --set sweep_label=random_%VERY_VERY_LARGE_RANDOM_NODES%_d%RANDOM_OUT_DEGREE% --output "%WR_JSONL%"
+        if errorlevel 1 exit /b 1
+    )
 )
 
 REM ============================================================
@@ -219,6 +245,43 @@ if "%RUN_ANALYSIS%"=="1" (
     if errorlevel 1 exit /b 1
 )
 
+
+REM ============================================================
+REM Delta parameter tuning
+REM ============================================================
+
+if "%RUN_DELTA_TUNING%"=="1" (
+    echo.
+    echo ============================================================
+    echo STEP 5: Delta parameter tuning
+    echo ============================================================
+    echo Output JSONL:
+    echo   %WR_DELTA_TUNING_JSONL%
+    echo.
+    echo This step checks whether the poor delta-stepping result is a bad
+    echo delta value or a more fundamental overhead issue.
+    echo.
+
+    echo --- delta tuning: layered_64x2048_f8 ---
+    for %%D in (2 4 8 16 32 64 128) do (
+        "%GPU_ALGOBENCH%" --benchmark graph_weighted_relaxation --preset tiny --repeat %WR_REPEAT% --warmup %WR_WARMUP% --set graph=layered --set layers=64 --set nodes_per_layer=2048 --set fanout=8 --set delta=%%D --set sweep_label=layered_64x2048_f8_delta%%D --output "%WR_DELTA_TUNING_JSONL%"
+        if errorlevel 1 exit /b 1
+    )
+
+    echo --- delta tuning: random_16384_d8 ---
+    for %%D in (2 4 8 16 32 64 128) do (
+        "%GPU_ALGOBENCH%" --benchmark graph_weighted_relaxation --preset tiny --repeat %WR_REPEAT% --warmup %WR_WARMUP% --set graph=random --set random_nodes=16384 --set random_out_degree=%RANDOM_OUT_DEGREE% --set seed=%RANDOM_SEED% --set delta=%%D --set sweep_label=random_16384_d%RANDOM_OUT_DEGREE%_delta%%D --output "%WR_DELTA_TUNING_JSONL%"
+        if errorlevel 1 exit /b 1
+    )
+
+    echo.
+    echo ============================================================
+    echo STEP 6: Plot delta tuning
+    echo ============================================================
+    "%PYTHON%" "%DELTA_TUNING_PLOT_SCRIPT%" --jsonl "%WR_DELTA_TUNING_JSONL%" --output-dir "%WR_DELTA_TUNING_PLOTS_PATH%" %PLOT_SHOW_ARG%
+    if errorlevel 1 exit /b 1
+)
+
 echo.
 echo ============================================================
 echo WEIGHTED RELAXATION SWEEP COMPLETE
@@ -230,6 +293,10 @@ echo Plots:
 echo   %WR_PLOTS_PATH%
 echo Recommendations:
 echo   %PROJECT_DIR%\%RESULTS_DIR%\%WR_RECOMMENDATION_DIR%
+echo Delta tuning JSONL:
+echo   %WR_DELTA_TUNING_JSONL%
+echo Delta tuning plots:
+echo   %WR_DELTA_TUNING_PLOTS_PATH%
 echo ============================================================
 
 endlocal

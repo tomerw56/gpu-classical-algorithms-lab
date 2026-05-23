@@ -1,0 +1,10 @@
+{
+  "graph_kind": "random_clusters",
+  "shape": "components=6, component_size=24, random_out_degree=3, seed=12648430",
+  "node_count": 144,
+  "directed_adjacency_entry_count": 972,
+  "component_count": 6,
+  "largest_component_size": 24,
+  "checksum": 878760,
+  "output_dir": "results/graph_components_demo"
+}

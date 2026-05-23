@@ -59,3 +59,30 @@ because convergence was not yet observed.
 ## Weighted-relaxation backend policy
 
 See `phase_03_graph_weighted_relaxation_backend_policy.md` for the current conclusion on CPU Dijkstra vs global GPU relaxation vs active-frontier GPU relaxation, including why the frontier method improved but still usually loses.
+
+
+## Weighted relaxation delta-stepping experiment
+
+The weighted-relaxation phase now includes a fourth backend row:
+
+```text
+gpu-delta-stepping
+```
+
+This is a bucketed active-relaxation experiment inspired by delta stepping. It is compared against CPU Dijkstra, the original global GPU edge scan, and the active frontier GPU variant. The analysis scripts and backend-recommendation flow now include delta-stepping columns and plots.
+
+
+See also: `phase_03_graph_weighted_relaxation_delta_tuning.md` for the delta-width tuning workflow.
+
+## Weighted SSSP final attempt: `gpu-delta-light-heavy`
+
+The weighted-relaxation chapter includes one final GPU attempt named
+`gpu-delta-light-heavy`. It is a delta-stepping-style experiment that separates
+light edges (`weight <= delta`) from heavy edges (`weight > delta`). It closes a
+bucket with light edges first, then relaxes heavy edges outward.
+
+This variant is intentionally treated as the final educational attempt for the
+weighted shortest-path section. If it does not beat CPU Dijkstra or the simpler
+`gpu` global scan, the documented conclusion is that weighted SSSP requires a
+more serious GPU graph algorithm or a mature graph library rather than a small
+frontier/bucket tweak.

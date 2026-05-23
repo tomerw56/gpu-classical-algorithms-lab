@@ -87,3 +87,8 @@ Phase 3.1 adds `test_graph_foundation`. Phase 3.2 adds `test_graph_bfs`, which v
 ## Phase 3.4 weighted-relaxation tests
 
 - `test_graph_weighted_relaxation` checks deterministic weighted graph construction, CPU Dijkstra validation, and benchmark metadata for `graph_weighted_relaxation`.
+
+
+## Weighted-relaxation final stress point
+
+The weighted-relaxation runner includes an optional/default very-very-large random stress point. This is not a unit test; it is a benchmark evidence point for the final weighted-shortest-path conclusion.

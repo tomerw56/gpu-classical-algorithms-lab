@@ -97,3 +97,19 @@ the convergence flag is only observed on the following pass. Therefore the
 default chain guard is `N` passes, not `N - 1`. This prevents a case where the
 distance vector is already correct but the row is marked `correct=no` only
 because convergence was not yet observed.
+
+
+## Weighted relaxation delta-stepping experiment
+
+The weighted-relaxation phase now includes a fourth backend row:
+
+```text
+gpu-delta-stepping
+```
+
+This is a bucketed active-relaxation experiment inspired by delta stepping. It is compared against CPU Dijkstra, the original global GPU edge scan, and the active frontier GPU variant. The analysis scripts and backend-recommendation flow now include delta-stepping columns and plots.
+
+
+## Delta-stepping scheduler fix
+
+See `docs/phase_03_graph_weighted_relaxation_delta_scheduler_fix.md` for the fix that prevents the `gpu-delta-stepping` variant from stopping early on high-diameter chain/grid-style cases. The result table was also widened so `gpu-delta-stepping` is displayed cleanly.

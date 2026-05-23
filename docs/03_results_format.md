@@ -245,3 +245,22 @@ Important files:
 
 These files summarize the fastest measured backend among `cpu`, `gpu`, and
 `gpu-frontier` for each graph family and size.
+
+
+## Weighted-relaxation delta-stepping fields
+
+The weighted-relaxation analyzer may emit the following delta-stepping columns:
+
+```text
+gpu_delta_ms_per_run
+speedup_cpu_over_gpu_delta
+gpu_global_to_delta_speedup
+gpu_frontier_to_delta_speedup
+gpu_delta_iterations
+gpu_delta_converged
+gpu_delta_active_node_visits
+gpu_delta_edge_work_estimate
+gpu_delta_max_frontier_size
+```
+
+These are produced by the `gpu-delta-stepping` variant.

@@ -650,3 +650,68 @@ The main current conclusion is that `gpu-frontier` is an educational experiment,
 not a default winner. CPU Dijkstra remains best for high-diameter chain/grid-like
 cases in the measured range, while the global GPU scan wins on large low-diameter
 random graphs.
+
+
+## Weighted relaxation delta-stepping experiment
+
+The weighted-relaxation phase now includes a fourth backend row:
+
+```text
+gpu-delta-stepping
+```
+
+This is a bucketed active-relaxation experiment inspired by delta stepping. It is compared against CPU Dijkstra, the original global GPU edge scan, and the active frontier GPU variant. The analysis scripts and backend-recommendation flow now include delta-stepping columns and plots.
+
+
+Weighted-relaxation delta plots include:
+
+```text
+graph_wr_delta_speedup.png
+graph_wr_global_to_delta_speedup.png
+graph_wr_frontier_to_delta_speedup.png
+graph_wr_delta_iterations.png
+graph_wr_delta_speedup_vs_work_estimate.png
+```
+
+
+## Delta-stepping scheduler fix
+
+See `docs/phase_03_graph_weighted_relaxation_delta_scheduler_fix.md` for the fix that prevents the `gpu-delta-stepping` variant from stopping early on high-diameter chain/grid-style cases. The result table was also widened so `gpu-delta-stepping` is displayed cleanly.
+
+
+### Weighted-relaxation delta tuning
+
+The weighted-relaxation runner also performs an optional delta-width tuning experiment for `gpu-delta-stepping`.
+It writes:
+
+```text
+results\graph_weighted_relaxation_delta_tuning.jsonl
+results\graph_weighted_relaxation_delta_tuning_plots```
+
+This is important because the delta variant is sensitive to the bucket width. If the tuning plots show that no tested delta value beats the global scan, the current implementation should be treated as educational rather than the recommended GPU backend.
+
+## Weighted SSSP final attempt: `gpu-delta-light-heavy`
+
+The weighted-relaxation chapter includes one final GPU attempt named
+`gpu-delta-light-heavy`. It is a delta-stepping-style experiment that separates
+light edges (`weight <= delta`) from heavy edges (`weight > delta`). It closes a
+bucket with light edges first, then relaxes heavy edges outward.
+
+This variant is intentionally treated as the final educational attempt for the
+weighted shortest-path section. If it does not beat CPU Dijkstra or the simpler
+`gpu` global scan, the documented conclusion is that weighted SSSP requires a
+more serious GPU graph algorithm or a mature graph library rather than a small
+frontier/bucket tweak.
+
+
+## Final weighted-relaxation conclusion
+
+See `docs/phase_03_graph_weighted_relaxation_final_conclusions.md` for the final conclusion of the weighted-shortest-path experiment. The canonical runner includes a very-very-large random stress point controlled by:
+
+```bat
+set "INCLUDE_VERY_VERY_LARGE_RANDOM=1"
+set "VERY_VERY_LARGE_RANDOM_NODES=1048576"
+set "VERY_VERY_LARGE_RANDOM_REPEAT=1"
+```
+
+The final expected policy is: CPU Dijkstra for chain/grid/layered and small random graphs; global GPU scan for sufficiently large random graphs. The frontier and delta variants remain useful educational counterexamples.

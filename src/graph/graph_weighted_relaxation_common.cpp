@@ -132,6 +132,11 @@ WeightedRelaxationShape weighted_shape_for_config(const BenchmarkConfig& config)
     shape.random_nodes = get_int_param_or(config, "random_nodes", shape.random_nodes);
     shape.random_out_degree = get_int_param_or(config, "random_out_degree", shape.random_out_degree);
     shape.random_seed = get_uint_param_or(config, "seed", shape.random_seed);
+    shape.delta = get_int_param_or(config, "delta", shape.delta);
+    if (shape.delta <= 0)
+    {
+        throw std::runtime_error("delta must be positive");
+    }
     shape.max_iterations = get_int_param_or(config, "max_iterations", shape.max_iterations);
 
     return shape;
