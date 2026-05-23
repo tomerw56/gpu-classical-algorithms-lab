@@ -4,6 +4,8 @@
 #include "cost_matrix/cost_matrix.hpp"
 #include "spatial_events/spatial_events.hpp"
 #include "graph/graph_bfs.hpp"
+#include "graph/graph_connected_components.hpp"
+#include "graph/graph_weighted_relaxation.hpp"
 
 #include <algorithm>
 #include <stdexcept>
@@ -173,6 +175,56 @@ BenchmarkRegistry make_default_registry()
             if (config.include_gpu)
             {
                 auto gpu_results = graph_bfs::run_graph_bfs_gpu(config);
+                results.insert(results.end(), gpu_results.begin(), gpu_results.end());
+            }
+#else
+            (void)config;
+#endif
+
+            return results;
+        });
+
+
+    registry.add(
+        BenchmarkInfo{
+            "graph_connected_components",
+            "CSR connected components: CPU Union-Find versus naive and non-naive GPU variants.",
+            {"tiny", "small", "medium", "large"}},
+        [](const BenchmarkConfig& config) {
+            std::vector<BenchmarkResult> results;
+
+            auto cpu_results = graph_cc::run_graph_connected_components_cpu(config);
+            results.insert(results.end(), cpu_results.begin(), cpu_results.end());
+
+#if GPUALGOBENCH_ENABLE_CUDA
+            if (config.include_gpu)
+            {
+                auto gpu_results = graph_cc::run_graph_connected_components_gpu(config);
+                results.insert(results.end(), gpu_results.begin(), gpu_results.end());
+            }
+#else
+            (void)config;
+#endif
+
+            return results;
+        });
+
+
+    registry.add(
+        BenchmarkInfo{
+            "graph_weighted_relaxation",
+            "Weighted shortest paths: CPU Dijkstra versus GPU iterative edge relaxation.",
+            {"tiny", "small", "medium", "large"}},
+        [](const BenchmarkConfig& config) {
+            std::vector<BenchmarkResult> results;
+
+            auto cpu_results = graph_weighted::run_graph_weighted_relaxation_cpu(config);
+            results.insert(results.end(), cpu_results.begin(), cpu_results.end());
+
+#if GPUALGOBENCH_ENABLE_CUDA
+            if (config.include_gpu)
+            {
+                auto gpu_results = graph_weighted::run_graph_weighted_relaxation_gpu(config);
                 results.insert(results.end(), gpu_results.begin(), gpu_results.end());
             }
 #else

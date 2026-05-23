@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 
 project(gpu_classical_algorithms_lab
-    VERSION 0.3.2.4
+    VERSION 0.3.4
     DESCRIPTION "Classical algorithms CPU/GPU benchmark lab"
     LANGUAGES CXX
 )
@@ -106,6 +106,10 @@ set(GPUALGOBENCH_COMMON_SOURCES
     src/graph/graph_foundation.cpp
     src/graph/graph_bfs_common.cpp
     src/graph/graph_bfs_cpu.cpp
+    src/graph/graph_connected_components_common.cpp
+    src/graph/graph_connected_components_cpu.cpp
+    src/graph/graph_weighted_relaxation_common.cpp
+    src/graph/graph_weighted_relaxation_cpu.cpp
 )
 
 if(GPUALGOBENCH_HAS_CUDA)
@@ -115,6 +119,8 @@ if(GPUALGOBENCH_HAS_CUDA)
         src/cost_matrix/cost_matrix_gpu.cu
         src/spatial_events/spatial_events_gpu.cu
         src/graph/graph_bfs_gpu.cu
+        src/graph/graph_connected_components_gpu.cu
+        src/graph/graph_weighted_relaxation_gpu.cu
     )
 endif()
 
@@ -262,6 +268,15 @@ target_link_libraries(export_graph_foundation
         gpu_algobench_common
 )
 
+add_executable(export_graph_components
+    apps/export_graph_components.cpp
+)
+
+target_link_libraries(export_graph_components
+    PRIVATE
+        gpu_algobench_common
+)
+
 # ============================================================
 # Tests
 # ============================================================
@@ -296,6 +311,8 @@ if(BUILD_TESTS)
     add_algobench_test(test_spatial_events tests/test_spatial_events.cpp)
     add_algobench_test(test_graph_foundation tests/test_graph_foundation.cpp)
     add_algobench_test(test_graph_bfs tests/test_graph_bfs.cpp)
+    add_algobench_test(test_graph_connected_components tests/test_graph_connected_components.cpp)
+    add_algobench_test(test_graph_weighted_relaxation tests/test_graph_weighted_relaxation.cpp)
 
     add_test(
         NAME export_cost_matrix_smoke
@@ -327,6 +344,16 @@ if(BUILD_TESTS)
             --output-dir ${CMAKE_CURRENT_BINARY_DIR}/export_graph_foundation_smoke
     )
 
+    add_test(
+        NAME export_graph_components_smoke
+        COMMAND export_graph_components
+            --graph random_clusters
+            --components 3
+            --component-size 12
+            --random-out-degree 2
+            --output-dir ${CMAKE_CURRENT_BINARY_DIR}/export_graph_components_smoke
+    )
+
     add_algobench_test(test_registry tests/test_registry.cpp)
     add_algobench_test(test_cli tests/test_cli.cpp)
     add_algobench_test(test_json_writer tests/test_json_writer.cpp)
@@ -349,6 +376,18 @@ configure_file(
 configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/execute_graph_bfs_all_sweeps_and_analyze.bat
     ${CMAKE_CURRENT_BINARY_DIR}/execute_graph_bfs_all_sweeps_and_analyze.bat
+    COPYONLY
+)
+
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/execute_graph_connected_components_all_sweeps_and_analyze.bat
+    ${CMAKE_CURRENT_BINARY_DIR}/execute_graph_connected_components_all_sweeps_and_analyze.bat
+    COPYONLY
+)
+
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/execute_graph_weighted_relaxation_all_sweeps_and_analyze.bat
+    ${CMAKE_CURRENT_BINARY_DIR}/execute_graph_weighted_relaxation_all_sweeps_and_analyze.bat
     COPYONLY
 )
 

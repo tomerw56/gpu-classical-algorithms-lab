@@ -144,8 +144,8 @@ void write_jsonl(const std::string& path, const std::vector<BenchmarkResult>& re
 void print_result_table(std::ostream& os, const std::vector<BenchmarkResult>& results)
 {
     os << std::left
-       << std::setw(24) << "benchmark"
-       << std::setw(10) << "variant"
+       << std::setw(30) << "benchmark"
+       << std::setw(16) << "variant"
        << std::setw(22) << "preset"
        << std::right
        << std::setw(14) << "total_ms"
@@ -153,13 +153,13 @@ void print_result_table(std::ostream& os, const std::vector<BenchmarkResult>& re
        << std::setw(10) << "correct"
        << "  device\n";
 
-    os << std::string(104, '-') << '\n';
+    os << std::string(118, '-') << '\n';
 
     for (const auto& r : results)
     {
         os << std::left
-           << std::setw(24) << r.benchmark
-           << std::setw(10) << r.variant
+           << std::setw(30) << r.benchmark
+           << std::setw(16) << r.variant
            << std::setw(22) << r.preset
            << std::right
            << std::setw(14) << std::fixed << std::setprecision(3) << r.total_ms

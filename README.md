@@ -2,7 +2,7 @@
 
 A C++/CUDA benchmark playground for testing where GPU acceleration helps classical algorithmic workloads: graph theory, constraint checking, cost matrices, spatial events, combinations, local search, and scenario simulation.
 
-This repository is currently in **Phase 3.2.8: single graph-BFS sweep runner**, after the Phase 1 infrastructure and the three Phase 2 CPU/GPU pairwise/data-parallel benchmarks.
+This repository is currently in **Phase 3.4: weighted graph relaxation**, after the Phase 1 infrastructure and the three Phase 2 CPU/GPU pairwise/data-parallel benchmarks.
 
 The current codebase includes:
 
@@ -19,6 +19,9 @@ The current codebase includes:
 - `cuda_probe` diagnostic executable.
 - `execute_all_tests.bat` to run the current test/benchmark suite from one command.
 - `execute_graph_bfs_all_sweeps_and_analyze.bat`, the single canonical BFS sweep/analyze/plot runner. It runs both the layered scale study and the chain/grid/layered/random shape × scale study.
+- `graph_connected_components`: CPU Union-Find versus CUDA iterative label propagation over disconnected CSR graph families.
+- `execute_graph_connected_components_all_sweeps_and_analyze.bat`, the single canonical connected-components sweep/analyze/plot runner. It runs chains, grids, random clusters, and mixed components across increasing sizes.
+- `export_graph_components`: inspectable CSV exporter used by the Python connected-components plotting utility.
 
 ### Graph BFS sweep/analyze/plot flow
 
@@ -51,7 +54,7 @@ results\graph_bfs_shape_scale_analysis\
 Older split BFS batch wrappers were intentionally retired so there is only one batch command to remember.
 
 - Frontier-anatomy BFS metadata and plots: depth, max frontier size, mean edge work per BFS level, and speedup versus frontier work.
-- CTest coverage for the registry, CLI, JSONL writer, random utilities, device info, foundation benchmark semantics, polynomial, cost-matrix, spatial-event, graph-foundation, and graph-BFS semantics.
+- CTest coverage for the registry, CLI, JSONL writer, random utilities, device info, foundation benchmark semantics, polynomial, cost-matrix, spatial-event, graph-foundation, graph-BFS, and graph-connected-components semantics.
 - `polynomial_batch`: degree-15 polynomial evaluation over many stride-100 `x` values, with CPU and CUDA implementations.
 - `cost_matrix`: branch-heavy task/resource feasibility and cost generation, with CPU and CUDA implementations.
 - `spatial_events`: track-segment versus circular-zone event detection, with CPU and CUDA implementations.
@@ -60,6 +63,8 @@ Older split BFS batch wrappers were intentionally retired so there is only one b
 - `export_graph_foundation`: inspectable multi-graph CSR exporter used by the Python graph-foundation plotting utility.
 - Graph foundation utilities: deterministic CSR construction plus chain, grid, layered, and sparse graph generators.
 - `graph_bfs`: CPU queue BFS versus CUDA frontier BFS over the generated CSR graph shapes.
+- `graph_connected_components`: CPU Union-Find versus CUDA label-propagation connected components.
+- `graph_weighted_relaxation`: CPU Dijkstra versus CUDA iterative edge relaxation for weighted shortest paths.
 
 
 #### Note on BFS anatomy plots and older JSONL files
@@ -173,6 +178,62 @@ set "INCLUDE_HEAVY_CASES=0"
 
 `INCLUDE_HEAVY_CASES=0` still runs every graph family. It only skips the largest stress cases. Set it to `1` when you want the full heavy chain/grid/layered/random sweep.
 
+
+Run the connected-components benchmark:
+
+```bat
+build-cuda-ninja\gpu_algobench.exe --benchmark graph_connected_components --preset small --repeat 5 --warmup 1
+```
+
+Compare connected-components graph families:
+
+```bat
+build-cuda-ninja\gpu_algobench.exe --benchmark graph_connected_components --preset small --repeat 5 --warmup 1 --set graph=chains
+build-cuda-ninja\gpu_algobench.exe --benchmark graph_connected_components --preset small --repeat 5 --warmup 1 --set graph=grid_components
+build-cuda-ninja\gpu_algobench.exe --benchmark graph_connected_components --preset small --repeat 5 --warmup 1 --set graph=random_clusters
+build-cuda-ninja\gpu_algobench.exe --benchmark graph_connected_components --preset small --repeat 5 --warmup 1 --set graph=mixed
+```
+
+Run all connected-components scale/anatomy experiments, analysis, and plots using the single connected-components runner:
+
+```bat
+execute_graph_connected_components_all_sweeps_and_analyze.bat
+```
+
+The script writes:
+
+```text
+results\graph_connected_components_shape_scale_sweep.jsonl
+results\graph_connected_components_shape_scale_analysis\
+results\graph_connected_components_shape_scale_plots\
+```
+
+The sweep includes:
+
+```text
+chains
+grid_components
+random_clusters
+mixed
+```
+
+Important switches are at the top of `execute_graph_connected_components_all_sweeps_and_analyze.bat`:
+
+```bat
+set "CC_REPEAT=3"
+set "CC_WARMUP=1"
+set "INCLUDE_HEAVY_CASES=0"
+```
+
+`INCLUDE_HEAVY_CASES=0` still runs every graph family. It only skips the largest stress points. Set it to `1` when you want the full heavy sweep.
+
+Export and plot a small connected-components graph:
+
+```bat
+build-cuda-ninja\export_graph_components.exe --graph random_clusters --components 6 --component-size 24 --output-dir results\graph_components_demo
+python scripts\plot_graph_components.py --input-dir results\graph_components_demo --show
+```
+
 Run the polynomial benchmark:
 
 ```bat
@@ -254,6 +315,7 @@ build-cuda-ninja\gpu_algobench.exe --benchmark foundation_smoke --preset small -
 build-cuda-ninja\gpu_algobench.exe --benchmark polynomial_batch --preset medium --repeat 5 --warmup 1 --output results\polynomial_medium.jsonl
 build-cuda-ninja\gpu_algobench.exe --benchmark cost_matrix --preset medium --repeat 3 --warmup 1 --output results\cost_matrix_medium.jsonl
 build-cuda-ninja\gpu_algobench.exe --benchmark spatial_events --preset medium --repeat 3 --warmup 1 --output results\spatial_events_medium.jsonl
+build-cuda-ninja\gpu_algobench.exe --benchmark graph_connected_components --preset medium --repeat 3 --warmup 1 --output results\graph_cc_medium.jsonl
 ```
 
 ## Execute all tests and current benchmarks
@@ -315,7 +377,8 @@ Use JSONL because it is easy to append, diff, parse, and plot.
 - Phase 3.2.1: BFS interpretation notes and graph-shape comparison runner. **Implemented.**
 - Phase 3.2.2: layered BFS scale sweep and crossover plotting. **Implemented.**
 - Phase 3.2.3: graph-shape × scale BFS sweep and plots. **Implemented.**
-- Phase 3.3: connected components.
+- Phase 3.3: connected components. **Implemented.**
+- Phase 3.3.1: connected-components shape × scale sweep and crossover plotting. **Implemented.**
 - Phase 3.4: weighted relaxation.
 - Phase 4: combinations, constraint network, local-search scoring, assignment preprocessing, scenario simulation.
 
@@ -395,3 +458,195 @@ set "INCLUDE_HEAVY_CASES=0"
 ```
 
 `INCLUDE_HEAVY_CASES=0` does **not** remove chain/grid/layered/random. It only skips the largest stress cases, such as `random_1048576`. Set it to `1` when you want the full heavy shape sweep.
+
+
+## Connected-components sweep conclusions
+
+The connected-components CPU baseline is **Union-Find**, while the GPU baseline is **iterative label propagation**.
+That means the GPU story is different from BFS:
+
+- GPU tends to win when a family has **many edges per iteration** and **few convergence iterations**.
+- CPU can still win when the graph family forces the GPU to perform many global propagation rounds.
+- In our representative sweep:
+  - `random_clusters` crosses over earliest and scales best on GPU.
+  - `grid_components` also becomes clearly GPU-friendly at larger sizes.
+  - `chains` crosses over later because the GPU needs more rounds.
+  - `mixed` is the cautionary case: it combines GPU-friendly and GPU-unfriendly structures, so the strong CPU Union-Find baseline can remain better even on heavier cases.
+
+Use the canonical runner:
+
+```bat
+execute_graph_connected_components_all_sweeps_and_analyze.bat
+```
+
+Important output plots now include:
+
+- `graph_cc_shape_scaling_times.png`
+- `graph_cc_shape_scaling_speedup.png`
+- `graph_cc_speedup_vs_edge_count.png`
+- `graph_cc_speedup_vs_edge_iterations.png`
+- `graph_cc_mixed_family_focus.png`
+
+
+## Non-naive GPU connected-components variant
+
+The connected-components benchmark now emits three rows per benchmark point when CUDA is enabled:
+
+```text
+cpu
+    CPU Union-Find reference baseline.
+
+gpu
+    Original educational GPU baseline: node-parallel label propagation using atomicMin plus one-step pointer jumping.
+
+gpu-non-naive
+    Improved educational GPU variant: edge-parallel root hooking plus full pointer-jumping compression.
+```
+
+The non-naive variant is not intended to be a final production GPU connected-components implementation. It is a second experimental step that tests whether reducing convergence rounds improves the graph families where the naive GPU version struggled, especially `chains` and `mixed`.
+
+The canonical connected-components sweep runner includes all three variants automatically:
+
+```bat
+execute_graph_connected_components_all_sweeps_and_analyze.bat
+```
+
+The analysis report now includes first crossover points for both GPU variants, and the plots include comparisons such as:
+
+- `graph_cc_shape_scaling_times.png`
+- `graph_cc_shape_scaling_speedup.png`
+- `graph_cc_naive_vs_non_naive.png`
+- `graph_cc_speedup_vs_edge_count.png`
+- `graph_cc_speedup_vs_edge_iterations.png`
+- `graph_cc_mixed_family_focus.png`
+
+
+### What to look for in the new connected-components run
+
+The important experiment is now whether `gpu-non-naive`:
+
+1. reduces the number of GPU convergence iterations,
+2. improves `mixed` and `chains`, where naive label propagation paid too many rounds,
+3. keeps or improves the strong random-cluster behavior,
+4. or becomes slower because each iteration does more work.
+
+Both outcomes are useful. If non-naive is faster, we have shown the value of algorithmic redesign. If it is slower on some graph families, we have shown the cost of heavier root-finding work inside each GPU iteration.
+
+
+### Connected-components GPU variant naming note
+
+The benchmark executable still uses the variant name `gpu` for the original naive GPU implementation. In analysis files and documentation, read that as `gpu-naive`. The newer optimized experiment is `gpu-non-naive`.
+
+The analysis CSV no longer writes a generic `gpu_ms_per_run` column, because it was only a duplicate alias for `gpu_naive_ms_per_run` and made it look like there were three GPU variants. Use these explicit columns instead:
+
+```text
+gpu_naive_ms_per_run
+gpu_non_naive_ms_per_run
+speedup_cpu_over_gpu_naive
+speedup_cpu_over_gpu_non_naive
+gpu_naive_to_non_naive_speedup
+```
+
+
+Run the weighted shortest-path benchmark:
+
+```bat
+build-cuda-ninja\gpu_algobench.exe --benchmark graph_weighted_relaxation --preset small --repeat 5 --warmup 1
+```
+
+Compare weighted graph families:
+
+```bat
+build-cuda-ninja\gpu_algobench.exe --benchmark graph_weighted_relaxation --preset small --repeat 3 --warmup 1 --set graph=chain
+build-cuda-ninja\gpu_algobench.exe --benchmark graph_weighted_relaxation --preset small --repeat 3 --warmup 1 --set graph=grid
+build-cuda-ninja\gpu_algobench.exe --benchmark graph_weighted_relaxation --preset small --repeat 3 --warmup 1 --set graph=layered
+build-cuda-ninja\gpu_algobench.exe --benchmark graph_weighted_relaxation --preset small --repeat 3 --warmup 1 --set graph=random
+```
+
+The GPU implementation is a simple edge-parallel relaxation baseline, not a production shortest-path solver. It is included to show the algorithmic tradeoff between CPU Dijkstra and GPU-friendly repeated edge scans.
+
+
+## Weighted graph relaxation sweep
+
+Phase 3.4 includes a canonical weighted shortest-path experiment flow:
+
+```bat
+execute_graph_weighted_relaxation_all_sweeps_and_analyze.bat
+```
+
+The script runs `graph_weighted_relaxation` over four graph families:
+
+- `chain`
+- `grid`
+- `layered`
+- `random`
+
+and increasing sizes. It writes:
+
+```text
+results\graph_weighted_relaxation_shape_scale_sweep.jsonl
+results\graph_weighted_relaxation_shape_scale_analysisresults\graph_weighted_relaxation_shape_scale_plots```
+
+The benchmark compares:
+
+- CPU Dijkstra with a priority queue
+- GPU iterative edge-parallel relaxation with `atomicMin`
+
+The most important plots are:
+
+- `graph_wr_shape_scaling_times.png`
+- `graph_wr_shape_scaling_speedup.png`
+- `graph_wr_gpu_iterations.png`
+- `graph_wr_speedup_vs_edge_iterations.png`
+
+Interpretation: weighted shortest path is not automatically GPU-friendly. The GPU version needs enough edge-parallel work and few convergence rounds. Chain/grid-like graphs may favor CPU Dijkstra; layered/random graphs are better candidates for GPU edge relaxation.
+
+
+## Weighted-relaxation convergence guard
+
+The GPU weighted-relaxation benchmark uses repeated edge-relaxation passes.
+A final pass with no changes is needed to prove convergence. The chain-family
+default therefore uses `N` passes for `N` nodes, not `N - 1`, so the first sweep
+case (`chain_256`) can complete correctly instead of stopping the batch early.
+
+
+## Weighted-relaxation variants
+
+`graph_weighted_relaxation` now emits three variants:
+
+- `cpu` - Dijkstra with a priority queue.
+- `gpu` - global Bellman-Ford-style edge scan using `atomicMin`.
+- `gpu-frontier` - active-frontier GPU relaxation that expands only nodes whose distances changed.
+
+Run the complete weighted experiment with:
+
+```bat
+execute_graph_weighted_relaxation_all_sweeps_and_analyze.bat
+```
+
+The analysis and plots compare CPU, global GPU, and frontier GPU. The frontier variant was added because the global scan variant repeatedly scans all edges and can be much slower on chain/grid/layered graphs.
+
+
+## Weighted-relaxation backend recommendations
+
+Weighted shortest path now reports three variants:
+
+- `cpu` - Dijkstra with a priority queue.
+- `gpu` - global GPU Bellman-Ford-style edge scan.
+- `gpu-frontier` - active-frontier GPU relaxation.
+
+The canonical weighted runner also generates a backend recommendation report:
+
+```bat
+execute_graph_weighted_relaxation_all_sweeps_and_analyze.bat
+```
+
+Recommendation output:
+
+```text
+results\graph_weighted_relaxation_backend_recommendations```
+
+The main current conclusion is that `gpu-frontier` is an educational experiment,
+not a default winner. CPU Dijkstra remains best for high-diameter chain/grid-like
+cases in the measured range, while the global GPU scan wins on large low-diameter
+random graphs.

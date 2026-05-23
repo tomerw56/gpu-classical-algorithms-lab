@@ -73,3 +73,8 @@ Use presets:
 ## Test coverage
 
 The tests intentionally check benchmark semantics, not raw performance. For example, `test_foundation` verifies that repeat count affects timing but does not alter the meaning of the reported checksum. `test_polynomial` applies the same rule to the first real algorithm benchmark and also checks Horner evaluation against a direct polynomial sum for a representative input. `test_cost_matrix` applies the same repeat/checksum policy to a branch-heavy dense matrix and checks both feasible and infeasible pair construction. `test_spatial_events` applies the same policy to a dense track-zone event matrix and forces `enter`, `exit`, `stay_inside`, `cross_through`, and `none` cases. `test_graph_bfs` validates the CPU queue-BFS reference distances and registered benchmark metadata before performance claims are made. Future algorithm benchmarks should follow the same pattern: small deterministic correctness cases first, performance measurements second.
+
+
+## Connected-components timing note
+
+The `graph_connected_components` GPU implementation is iterative. Its `kernel_ms` field measures the whole convergence loop, including repeated hook/compress kernels and per-iteration convergence checks. This mirrors the BFS caveat: graph GPU timings often include algorithm orchestration, not just one pure kernel launch.

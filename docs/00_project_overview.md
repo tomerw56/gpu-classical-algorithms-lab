@@ -39,7 +39,7 @@ Every benchmark should eventually have:
 
 ## Current foundation
 
-The current codebase contains the shared benchmark infrastructure, the `foundation_smoke` benchmark, three real Phase 2 algorithm benchmarks (`polynomial_batch`, `cost_matrix`, and `spatial_events`), the Phase 3.1 CSR graph foundation, and the Phase 3.2 `graph_bfs` traversal benchmark.
+The current codebase contains the shared benchmark infrastructure, the `foundation_smoke` benchmark, three real Phase 2 algorithm benchmarks (`polynomial_batch`, `cost_matrix`, and `spatial_events`), the Phase 3.1 CSR graph foundation, the Phase 3.2 `graph_bfs` traversal benchmark, and the Phase 3.3 `graph_connected_components` benchmark.
 
 It also contains:
 
@@ -49,7 +49,8 @@ It also contains:
 - `export_cost_matrix` and `plot_cost_matrix.py` for inspecting cost-matrix inputs/results.
 - `export_spatial_events` and `plot_spatial_events.py` for inspecting spatial-event geometry and result matrices.
 - `export_graph_foundation` and `plot_graph_foundation.py` for inspecting chain, grid, layered, and random sparse CSR demo graphs.
-- `CsrGraph`, deterministic graph generators, validation, degree statistics, and CPU/GPU BFS traversal over those graph shapes.
+- `export_graph_components` and `plot_graph_components.py` for inspecting connected-component labels and component sizes.
+- `CsrGraph`, deterministic graph generators, validation, degree statistics, CPU/GPU BFS traversal, and CPU/GPU connected-components labeling over CSR graphs.
 
 ## Current implemented benchmarks
 
@@ -59,7 +60,7 @@ It also contains:
 
 `spatial_events` evaluates deterministic moving track segments against circular zones, classifying `none`, `enter`, `exit`, `stay_inside`, and `cross_through` cases. It has both CPU and CUDA implementations, event-code and score validation, JSONL result metadata, dedicated tests, and an exporter/plotter pair for visual inspection.
 
-`graph_foundation` establishes the CSR representation and deterministic chain, grid, layered, and sparse graph generators. Phase 3.1.1 adds an exporter/plotter pair so those graph shapes can be inspected. Phase 3.2 adds `graph_bfs`, a CPU queue BFS versus CUDA frontier BFS traversal benchmark over those same shapes. Phase 3.2.1 documents why this first transparent GPU BFS can lose to the CPU baseline and adds a shape-comparison runner.
+`graph_foundation` establishes the CSR representation and deterministic chain, grid, layered, and sparse graph generators. Phase 3.1.1 adds an exporter/plotter pair so those graph shapes can be inspected. Phase 3.2 adds `graph_bfs`, a CPU queue BFS versus CUDA frontier BFS traversal benchmark over those same shapes. Phase 3.2.1 documents why this first transparent GPU BFS can lose to the CPU baseline and adds a shape-comparison runner. Phase 3.3 adds `graph_connected_components`, a CPU Union-Find versus CUDA label-propagation benchmark over disconnected graph families.
 
 See:
 
@@ -78,10 +79,12 @@ See:
 - `docs/phase_03_graph_bfs_shape_scaling.md`
 - `docs/phase_03_graph_bfs_frontier_anatomy.md`
 - `docs/phase_03_graph_bfs_single_runner.md`
+- `docs/graph_connected_components.md`
+- `docs/phase_03_graph_connected_components.md`
 
 ## Test foundation
 
-The test suite covers the registry, CLI, JSON writer, random utilities, device info, foundation smoke benchmark semantics, polynomial benchmark semantics, cost-matrix benchmark semantics, spatial-event benchmark semantics, CSR graph foundation semantics, and BFS traversal semantics.
+The test suite covers the registry, CLI, JSON writer, random utilities, device info, foundation smoke benchmark semantics, polynomial benchmark semantics, cost-matrix benchmark semantics, spatial-event benchmark semantics, CSR graph foundation semantics, BFS traversal semantics, and connected-components semantics.
 
 ## Current graph-BFS follow-up
 
@@ -105,3 +108,34 @@ execute_graph_bfs_all_sweeps_and_analyze.bat
 ```
 
 This script is self-contained. It runs the layered-only sweep, the chain/grid/layered/random shape × scale sweep, the JSONL analyzer, and both plotters. Older split `execute_graph_bfs*.bat` wrappers were retired to avoid duplicated logic and batch-label errors.
+
+
+## Connected-components scaling runner
+
+Use `execute_graph_connected_components_all_sweeps_and_analyze.bat` to run the connected-components shape × scale study. It writes one JSONL file, an analysis report, and timing/speedup/convergence plots. See `docs/phase_03_graph_connected_components_scaling.md`.
+
+
+## Appendices
+
+- `appendix_graph_findings.md` - accumulated conclusions from the BFS and connected-components graph studies.
+
+- `phase_03_graph_connected_components_non_naive.md` - adds the gpu-non-naive connected-components variant and explains expected tradeoffs.
+
+- `phase_03_graph_connected_components_variant_naming.md` - explains why the executable variant `gpu` means `gpu-naive` in connected-components analysis.
+
+
+## Phase 3.4: weighted graph relaxation
+
+Adds `graph_weighted_relaxation`: CPU Dijkstra versus CUDA iterative edge relaxation. This phase demonstrates that weighted shortest-path problems are not automatically GPU-friendly; the GPU baseline exposes parallel edge work, but may do many repeated global relaxation passes.
+
+- `phase_03_graph_weighted_relaxation_scaling.md` - weighted shortest-path sweep/analyze/plot flow.
+
+- `phase_03_graph_weighted_relaxation_frontier.md` - active-frontier GPU shortest-path relaxation variant and interpretation.
+
+
+See also: `phase_03_graph_weighted_relaxation_frontier_retrospective.md`.
+
+
+## Weighted-relaxation backend policy
+
+See `phase_03_graph_weighted_relaxation_backend_policy.md` for the current conclusion on CPU Dijkstra vs global GPU relaxation vs active-frontier GPU relaxation, including why the frontier method improved but still usually loses.

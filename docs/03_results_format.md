@@ -121,3 +121,127 @@ speedup = CPU_ms_per_run / GPU_ms_per_run
 - `validation`: short description of the distance validator.
 
 These fields are particularly important because BFS performance depends heavily on graph topology and frontier shape. The shape-scaling plotter uses the frontier fields to show why very large random graphs can cross over while chain/grid cases stay CPU-favored.
+
+
+## Graph connected-components metadata
+
+`graph_connected_components` adds metadata fields such as:
+
+```text
+graph_kind
+shape
+component_count
+largest_component_size
+isolated_node_count
+mismatch_count
+checksum
+reference_checksum
+iterations
+converged
+```
+
+For the GPU row, `kernel_ms` describes the timed label-propagation convergence loop, not one isolated kernel. The loop may launch multiple hook/compress kernels until labels stop changing or `max_iterations` is reached.
+
+
+## Connected-components scaling summaries
+
+The script `plot_graph_connected_components_scaling.py` writes `graph_connected_components_shape_scaling_summary.csv`. It normalizes benchmark `total_ms` by `repeat`, then reports CPU/GPU milliseconds per run, CPU/GPU speedup, GPU convergence iterations, component counts, largest component size, and mean out-degree.
+
+
+## Non-naive GPU connected-components variant
+
+The connected-components benchmark now emits three rows per benchmark point when CUDA is enabled:
+
+```text
+cpu
+    CPU Union-Find reference baseline.
+
+gpu
+    Original educational GPU baseline: node-parallel label propagation using atomicMin plus one-step pointer jumping.
+
+gpu-non-naive
+    Improved educational GPU variant: edge-parallel root hooking plus full pointer-jumping compression.
+```
+
+The non-naive variant is not intended to be a final production GPU connected-components implementation. It is a second experimental step that tests whether reducing convergence rounds improves the graph families where the naive GPU version struggled, especially `chains` and `mixed`.
+
+The canonical connected-components sweep runner includes all three variants automatically:
+
+```bat
+execute_graph_connected_components_all_sweeps_and_analyze.bat
+```
+
+The analysis report now includes first crossover points for both GPU variants, and the plots include comparisons such as:
+
+- `graph_cc_shape_scaling_times.png`
+- `graph_cc_shape_scaling_speedup.png`
+- `graph_cc_naive_vs_non_naive.png`
+- `graph_cc_speedup_vs_edge_count.png`
+- `graph_cc_speedup_vs_edge_iterations.png`
+- `graph_cc_mixed_family_focus.png`
+
+
+## `graph_weighted_relaxation` metadata
+
+The weighted shortest-path benchmark writes metadata including:
+
+- `graph_kind`
+- `shape`
+- `source`
+- `edge_count`
+- `reached_count`
+- `max_finite_distance`
+- `iterations`
+- `converged`
+- `mismatch_count`
+- `checksum` / `reference_checksum`
+
+For the GPU row, `kernel_ms` represents the timed iterative relaxation loop, including repeated global edge scans and host convergence checks. It is not a single isolated kernel duration.
+
+
+## Weighted-relaxation sweep outputs
+
+The canonical weighted graph flow writes:
+
+```text
+results\graph_weighted_relaxation_shape_scale_sweep.jsonl
+```
+
+Each benchmark point contains CPU and GPU rows. Important metadata fields include:
+
+```text
+graph_kind
+shape
+iterations
+max_iterations
+converged
+reached_count
+max_finite_distance
+mean_out_degree
+mismatch_count
+```
+
+The analysis script derives:
+
+```text
+gpu_edge_iterations = edge_count × gpu_iterations
+speedup_cpu_over_gpu = cpu_ms_per_run / gpu_ms_per_run
+```
+
+
+## Weighted-relaxation backend recommendation outputs
+
+The weighted-relaxation runner writes an additional recommendation folder:
+
+```text
+results/graph_weighted_relaxation_backend_recommendations/
+```
+
+Important files:
+
+- `graph_weighted_relaxation_backend_recommendations.csv`
+- `graph_weighted_relaxation_backend_recommendations.md`
+- `graph_wr_backend_recommendations.png`
+
+These files summarize the fastest measured backend among `cpu`, `gpu`, and
+`gpu-frontier` for each graph family and size.

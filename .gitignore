@@ -10,3 +10,5 @@ results/*.jsonl
 results/*.png
 results/*.md
 !results/.gitkeep
+results/graph_weighted_relaxation_shape_scale_analysis/graph_weighted_relaxation_analysis_summary.csv
+/results

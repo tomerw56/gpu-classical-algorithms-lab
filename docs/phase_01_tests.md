@@ -16,6 +16,7 @@ CTest currently runs these executables:
 | `test_spatial_events` | Checks spatial-event presets, deterministic tracks/zones, forced enter/exit/stay/cross/none cases, result metadata, and repeat/checksum policy. |
 | `test_graph_foundation` | Checks CSR building/validation, chain/grid/layered/sparse graph generators, degree statistics, and bad-input rejection. |
 | `test_graph_bfs` | Checks CPU queue BFS distances on chain/grid/disconnected graphs, tiny benchmark metadata, and bad-source rejection. |
+| `test_graph_connected_components` | Checks Union-Find labels, normalization, disconnected graph families, tiny benchmark metadata, and bad-input rejection. |
 | `test_registry` | Checks default benchmark registration, `all`, named benchmark execution, and unknown benchmark errors. |
 | `test_cli` | Checks command-line parsing, flags, repeated `--set`, and invalid argument handling. |
 | `test_json_writer` | Checks JSONL serialization, escaping, append/truncate behavior, and table printing. |
@@ -75,7 +76,14 @@ Phase 2.3 adds `export_spatial_events_smoke`. It runs the spatial exporter on a 
 
 Phase 3.1.1 adds `export_graph_foundation_smoke`. It exports small chain, grid, layered, and random sparse graph snapshots and verifies through process success that the graph visualization bundle path remains wired into the build.
 
+Phase 3.3 adds `export_graph_components_smoke`. It exports a small random-cluster connected-components graph and verifies through process success that the component-label visualization export path remains wired into the build.
+
 
 ## Graph foundation coverage
 
-Phase 3.1 adds `test_graph_foundation`. Phase 3.2 adds `test_graph_bfs`, which validates the queue BFS reference and the registered benchmark metadata before relying on it for CPU/GPU timing comparisons.
+Phase 3.1 adds `test_graph_foundation`. Phase 3.2 adds `test_graph_bfs`, which validates the queue BFS reference and the registered benchmark metadata before relying on it for CPU/GPU timing comparisons. Phase 3.3 adds `test_graph_connected_components`, which validates Union-Find labels, label normalization, and component-family generation before relying on them for CPU/GPU comparisons.
+
+
+## Phase 3.4 weighted-relaxation tests
+
+- `test_graph_weighted_relaxation` checks deterministic weighted graph construction, CPU Dijkstra validation, and benchmark metadata for `graph_weighted_relaxation`.

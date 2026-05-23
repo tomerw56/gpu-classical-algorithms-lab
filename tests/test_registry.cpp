@@ -10,7 +10,7 @@ int main()
     auto registry = algobench::make_default_registry();
 
     const auto infos = registry.list();
-    TEST_CHECK_EQ(infos.size(), static_cast<std::size_t>(5));
+    TEST_CHECK_EQ(infos.size(), static_cast<std::size_t>(7));
 
     const auto foundation_it = std::find_if(infos.begin(), infos.end(), [](const algobench::BenchmarkInfo& info) {
         return info.name == "foundation_smoke";
@@ -67,6 +67,30 @@ int main()
         TEST_CHECK_EQ(graph_bfs_it->presets.front(), std::string("tiny"));
     }
 
+
+
+    const auto graph_cc_it = std::find_if(infos.begin(), infos.end(), [](const algobench::BenchmarkInfo& info) {
+        return info.name == "graph_connected_components";
+    });
+    TEST_CHECK(graph_cc_it != infos.end());
+    if (graph_cc_it != infos.end())
+    {
+        TEST_CHECK(!graph_cc_it->description.empty());
+        TEST_CHECK_EQ(graph_cc_it->presets.size(), static_cast<std::size_t>(4));
+        TEST_CHECK_EQ(graph_cc_it->presets.front(), std::string("tiny"));
+    }
+
+    const auto graph_weighted_it = std::find_if(infos.begin(), infos.end(), [](const algobench::BenchmarkInfo& info) {
+        return info.name == "graph_weighted_relaxation";
+    });
+    TEST_CHECK(graph_weighted_it != infos.end());
+    if (graph_weighted_it != infos.end())
+    {
+        TEST_CHECK(!graph_weighted_it->description.empty());
+        TEST_CHECK_EQ(graph_weighted_it->presets.size(), static_cast<std::size_t>(4));
+        TEST_CHECK_EQ(graph_weighted_it->presets.front(), std::string("tiny"));
+    }
+
     algobench::BenchmarkConfig config;
     config.preset = "tiny";
     config.repeat = 1;
@@ -103,13 +127,29 @@ int main()
     TEST_CHECK_EQ(graph_bfs_results.front().variant, std::string("cpu"));
     TEST_CHECK(graph_bfs_results.front().correct);
 
+
+
+    const auto graph_cc_results = registry.run("graph_connected_components", config);
+    TEST_CHECK_EQ(graph_cc_results.size(), static_cast<std::size_t>(1));
+    TEST_CHECK_EQ(graph_cc_results.front().benchmark, std::string("graph_connected_components"));
+    TEST_CHECK_EQ(graph_cc_results.front().variant, std::string("cpu"));
+    TEST_CHECK(graph_cc_results.front().correct);
+
+    const auto graph_weighted_results = registry.run("graph_weighted_relaxation", config);
+    TEST_CHECK_EQ(graph_weighted_results.size(), static_cast<std::size_t>(1));
+    TEST_CHECK_EQ(graph_weighted_results.front().benchmark, std::string("graph_weighted_relaxation"));
+    TEST_CHECK_EQ(graph_weighted_results.front().variant, std::string("cpu"));
+    TEST_CHECK(graph_weighted_results.front().correct);
+
     const auto all_results = registry.run("all", config);
-    TEST_CHECK_EQ(all_results.size(), static_cast<std::size_t>(5));
+    TEST_CHECK_EQ(all_results.size(), static_cast<std::size_t>(7));
     TEST_CHECK_EQ(all_results[0].benchmark, std::string("foundation_smoke"));
     TEST_CHECK_EQ(all_results[1].benchmark, std::string("polynomial_batch"));
     TEST_CHECK_EQ(all_results[2].benchmark, std::string("cost_matrix"));
     TEST_CHECK_EQ(all_results[3].benchmark, std::string("spatial_events"));
     TEST_CHECK_EQ(all_results[4].benchmark, std::string("graph_bfs"));
+    TEST_CHECK_EQ(all_results[5].benchmark, std::string("graph_connected_components"));
+    TEST_CHECK_EQ(all_results[6].benchmark, std::string("graph_weighted_relaxation"));
 
     TEST_CHECK_THROWS((void)registry.run("does_not_exist", config));
 
