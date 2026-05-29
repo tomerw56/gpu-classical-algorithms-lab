@@ -183,3 +183,31 @@ set "VERY_VERY_LARGE_RANDOM_REPEAT=1"
 ```
 
 The final expected policy is: CPU Dijkstra for chain/grid/layered and small random graphs; global GPU scan for sufficiently large random graphs. The frontier and delta variants remain useful educational counterexamples.
+
+
+## Phase 4.1 - Constraint network
+
+Adds `constraint_network`, a CPU/GPU benchmark for validating many candidate assignments against several constraints. See `phase_04_constraint_network.md`.
+
+
+- `docs/phase_04_constraint_network_validation_fix.md` - explains the Phase 4.1 GPU validation tolerance fix for the constraint-network benchmark.
+
+
+## Constraint-network diagnostics
+
+Phase 4.1 includes a richer diagnostic plotting script:
+
+```bat
+python scripts\plot_constraint_network_diagnostics.py ^
+  --jsonl results\constraint_network_scale_sweep.jsonl ^
+  --output-dir results\constraint_network_diagnostics ^
+  --show
+```
+
+The canonical runner also invokes this script automatically. It visualizes valid/invalid ratios, violation reasons, GPU transfer/kernel/output-copy breakdown, and CPU/GPU penalty validation error.
+
+## Constraint-network visualization
+
+The constraint-network phase includes both performance plots and problem-definition plots. The problem-definition exporter visualizes which task/resource pairs are compatible, which candidates are valid, and why candidates are rejected.
+
+See `docs/phase_04_constraint_network_problem_visualization.md`.

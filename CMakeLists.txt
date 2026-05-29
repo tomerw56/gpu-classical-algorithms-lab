@@ -110,6 +110,8 @@ set(GPUALGOBENCH_COMMON_SOURCES
     src/graph/graph_connected_components_cpu.cpp
     src/graph/graph_weighted_relaxation_common.cpp
     src/graph/graph_weighted_relaxation_cpu.cpp
+    src/constraints/constraint_network_common.cpp
+    src/constraints/constraint_network_cpu.cpp
 )
 
 if(GPUALGOBENCH_HAS_CUDA)
@@ -121,6 +123,7 @@ if(GPUALGOBENCH_HAS_CUDA)
         src/graph/graph_bfs_gpu.cu
         src/graph/graph_connected_components_gpu.cu
         src/graph/graph_weighted_relaxation_gpu.cu
+        src/constraints/constraint_network_gpu.cu
     )
 endif()
 
@@ -277,6 +280,15 @@ target_link_libraries(export_graph_components
         gpu_algobench_common
 )
 
+add_executable(export_constraint_network
+    apps/export_constraint_network.cpp
+)
+
+target_link_libraries(export_constraint_network
+    PRIVATE
+        gpu_algobench_common
+)
+
 # ============================================================
 # Tests
 # ============================================================
@@ -313,6 +325,7 @@ if(BUILD_TESTS)
     add_algobench_test(test_graph_bfs tests/test_graph_bfs.cpp)
     add_algobench_test(test_graph_connected_components tests/test_graph_connected_components.cpp)
     add_algobench_test(test_graph_weighted_relaxation tests/test_graph_weighted_relaxation.cpp)
+    add_algobench_test(test_constraint_network tests/test_constraint_network.cpp)
 
     add_test(
         NAME export_cost_matrix_smoke
@@ -354,6 +367,15 @@ if(BUILD_TESTS)
             --output-dir ${CMAKE_CURRENT_BINARY_DIR}/export_graph_components_smoke
     )
 
+    add_test(
+        NAME export_constraint_network_smoke
+        COMMAND export_constraint_network
+            --tasks 6
+            --resources 4
+            --candidates 24
+            --output-dir ${CMAKE_CURRENT_BINARY_DIR}/export_constraint_network_smoke
+    )
+
     add_algobench_test(test_registry tests/test_registry.cpp)
     add_algobench_test(test_cli tests/test_cli.cpp)
     add_algobench_test(test_json_writer tests/test_json_writer.cpp)
@@ -388,6 +410,12 @@ configure_file(
 configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/execute_graph_weighted_relaxation_all_sweeps_and_analyze.bat
     ${CMAKE_CURRENT_BINARY_DIR}/execute_graph_weighted_relaxation_all_sweeps_and_analyze.bat
+    COPYONLY
+)
+
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/execute_constraint_network_all_sweeps_and_analyze.bat
+    ${CMAKE_CURRENT_BINARY_DIR}/execute_constraint_network_all_sweeps_and_analyze.bat
     COPYONLY
 )
 

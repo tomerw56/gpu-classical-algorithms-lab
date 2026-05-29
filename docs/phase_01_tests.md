@@ -92,3 +92,14 @@ Phase 3.1 adds `test_graph_foundation`. Phase 3.2 adds `test_graph_bfs`, which v
 ## Weighted-relaxation final stress point
 
 The weighted-relaxation runner includes an optional/default very-very-large random stress point. This is not a unit test; it is a benchmark evidence point for the final weighted-shortest-path conclusion.
+
+
+## Constraint-network tests
+
+`test_constraint_network` checks the direct constraint evaluator, deterministic problem generation, CPU reference validation, and benchmark metadata.
+
+
+- `docs/phase_04_constraint_network_validation_fix.md` - explains the Phase 4.1 GPU validation tolerance fix for the constraint-network benchmark.
+
+
+The constraint-network sweep runner also invokes `scripts/plot_constraint_network_diagnostics.py` to produce data-understanding plots from the JSONL results.

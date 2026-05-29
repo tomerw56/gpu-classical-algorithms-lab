@@ -264,3 +264,26 @@ gpu_delta_max_frontier_size
 ```
 
 These are produced by the `gpu-delta-stepping` variant.
+
+
+## Constraint-network metadata
+
+`constraint_network` rows include:
+
+- `valid_count`
+- `reference_valid_count`
+- `invalid_count`
+- `total_violations`
+- `reference_total_violations`
+- `validity_mismatches`
+- `mask_mismatches`
+- `violation_count_mismatches`
+- `checksum`
+- `reference_checksum`
+- `max_abs_error`
+- `max_rel_error`
+
+
+## `constraint_network` sweep labels
+
+The constraint-network runner passes `--set sweep_label=...` so the `preset` field in JSONL/reporting can show labels such as `cn_64k`, `cn_512k`, and `cn_4m`. The underlying benchmark size is still recorded explicitly in `input_size.tasks`, `input_size.resources`, and `input_size.candidates`.

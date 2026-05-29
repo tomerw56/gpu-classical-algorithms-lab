@@ -715,3 +715,52 @@ set "VERY_VERY_LARGE_RANDOM_REPEAT=1"
 ```
 
 The final expected policy is: CPU Dijkstra for chain/grid/layered and small random graphs; global GPU scan for sufficiently large random graphs. The frontier and delta variants remain useful educational counterexamples.
+
+
+## Phase 4.1: Constraint network
+
+`constraint_network` evaluates many candidate task/resource assignments against skill, capacity, time-window, distance, zone, and risk constraints.
+
+Run a direct benchmark:
+
+```bat
+build-cuda-ninja\gpu_algobench.exe --benchmark constraint_network --preset small --repeat 5 --warmup 1
+```
+
+Run the full sweep/analyze/plot workflow:
+
+```bat
+execute_constraint_network_all_sweeps_and_analyze.bat
+```
+
+The runner uses a fine-grained candidate-count sweep from `cn_4k` through `cn_4m` by default. Set `INCLUDE_HEAVY_CASES=1` inside the batch file to add `cn_8m` and `cn_16m` stress points.
+
+This phase demonstrates a GPU-friendly optimization-support pattern: the final solver may remain CPU-side, but candidate validation and scoring can be massively parallel.
+
+
+- `docs/phase_04_constraint_network_validation_fix.md` - explains the Phase 4.1 GPU validation tolerance fix for the constraint-network benchmark.
+
+
+## Constraint-network diagnostics
+
+Phase 4.1 includes a richer diagnostic plotting script:
+
+```bat
+python scripts\plot_constraint_network_diagnostics.py ^
+  --jsonl results\constraint_network_scale_sweep.jsonl ^
+  --output-dir results\constraint_network_diagnostics ^
+  --show
+```
+
+The canonical runner also invokes this script automatically. It visualizes valid/invalid ratios, violation reasons, GPU transfer/kernel/output-copy breakdown, and CPU/GPU penalty validation error.
+
+### Constraint-network problem definition plots
+
+To see the generated constraint problem itself, run:
+
+```bat
+build-cuda-ninja\export_constraint_network.exe --tasks 32 --resources 16 --candidates 512 --output-dir results\constraint_network_problem_demo
+python scripts\plot_constraint_network_problem.py --input-dir results\constraint_network_problem_demo --show
+```
+
+This creates compatibility matrices, candidate assignment scatter plots, violation-reason plots, and time-window plots. The canonical `execute_constraint_network_all_sweeps_and_analyze.bat` script also runs this export/plot step by default.
