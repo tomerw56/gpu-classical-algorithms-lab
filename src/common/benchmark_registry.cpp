@@ -7,6 +7,7 @@
 #include "graph/graph_connected_components.hpp"
 #include "graph/graph_weighted_relaxation.hpp"
 #include "constraints/constraint_network.hpp"
+#include "combinations/combination_finder.hpp"
 
 #include <algorithm>
 #include <stdexcept>
@@ -251,6 +252,32 @@ BenchmarkRegistry make_default_registry()
             if (config.include_gpu)
             {
                 auto gpu_results = constraints::run_constraint_network_gpu(config);
+                results.insert(results.end(), gpu_results.begin(), gpu_results.end());
+            }
+#else
+            (void)config;
+#endif
+
+            return results;
+        });
+
+
+
+    registry.add(
+        BenchmarkInfo{
+            "combination_finder",
+            "Exhaustive k-combination candidate evaluation: CPU enumeration versus GPU one-thread-per-combination.",
+            {"tiny", "small", "medium", "large"}},
+        [](const BenchmarkConfig& config) {
+            std::vector<BenchmarkResult> results;
+
+            auto cpu_results = combinations::run_combination_finder_cpu(config);
+            results.insert(results.end(), cpu_results.begin(), cpu_results.end());
+
+#if GPUALGOBENCH_ENABLE_CUDA
+            if (config.include_gpu)
+            {
+                auto gpu_results = combinations::run_combination_finder_gpu(config);
                 results.insert(results.end(), gpu_results.begin(), gpu_results.end());
             }
 #else

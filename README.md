@@ -2,7 +2,24 @@
 
 A C++/CUDA benchmark playground for testing where GPU acceleration helps classical algorithmic workloads: graph theory, constraint checking, cost matrices, spatial events, combinations, local search, and scenario simulation.
 
-This repository is currently in **Phase 3.4: weighted graph relaxation**, after the Phase 1 infrastructure and the three Phase 2 CPU/GPU pairwise/data-parallel benchmarks.
+This repository is currently in **Phase 4.2: combination finder / candidate enumeration**, after completing the Phase 3 graph studies and Phase 4.1 constraint-network benchmark.
+
+
+## Documentation map
+
+The documentation is now organized through two index files:
+
+- `docs/documentation_index.md` - ordered map of the repository docs, runners, benchmark chapters, and lecture reading path.
+- `docs/literature_and_problem_definitions.md` - source-backed problem definitions and literature links for all featured benchmark families: polynomial evaluation, cost/assignment scoring, spatial event detection, CSR graphs, BFS, connected components, weighted shortest paths, constraint satisfaction, and combination enumeration.
+
+Recommended first read:
+
+```text
+docs/documentation_index.md
+docs/literature_and_problem_definitions.md
+docs/01_benchmarking_methodology.md
+docs/02_gpu_pitfalls.md
+```
 
 The current codebase includes:
 
@@ -764,3 +781,35 @@ python scripts\plot_constraint_network_problem.py --input-dir results\constraint
 ```
 
 This creates compatibility matrices, candidate assignment scatter plots, violation-reason plots, and time-window plots. The canonical `execute_constraint_network_all_sweeps_and_analyze.bat` script also runs this export/plot step by default.
+
+## Phase 4.2: Combination finder
+
+`combination_finder` evaluates unordered candidate groups (`k`-combinations) under budget, risk, category-coverage, and spatial-spread rules.
+
+Run a direct benchmark:
+
+```bat
+build-cuda-ninja\gpu_algobench.exe --benchmark combination_finder --preset small --repeat 5 --warmup 1
+```
+
+Run the canonical sweep/analyze/plot flow:
+
+```bat
+execute_combination_finder_all_sweeps_and_analyze.bat
+```
+
+The sweep writes:
+
+```text
+results\combination_finder_scale_sweep.jsonl
+results\combination_finder_analysis\
+results\combination_finder_plots\
+```
+
+The source-backed problem-definition note is:
+
+```text
+docs\phase_04_combination_problem_definitions.md
+```
+
+It links to verified definitions for combinations, binomial coefficients, combinatorial explosion, brute-force search, backtracking, and CUDA.

@@ -112,6 +112,8 @@ set(GPUALGOBENCH_COMMON_SOURCES
     src/graph/graph_weighted_relaxation_cpu.cpp
     src/constraints/constraint_network_common.cpp
     src/constraints/constraint_network_cpu.cpp
+    src/combinations/combination_finder_common.cpp
+    src/combinations/combination_finder_cpu.cpp
 )
 
 if(GPUALGOBENCH_HAS_CUDA)
@@ -124,6 +126,7 @@ if(GPUALGOBENCH_HAS_CUDA)
         src/graph/graph_connected_components_gpu.cu
         src/graph/graph_weighted_relaxation_gpu.cu
         src/constraints/constraint_network_gpu.cu
+        src/combinations/combination_finder_gpu.cu
     )
 endif()
 
@@ -326,6 +329,7 @@ if(BUILD_TESTS)
     add_algobench_test(test_graph_connected_components tests/test_graph_connected_components.cpp)
     add_algobench_test(test_graph_weighted_relaxation tests/test_graph_weighted_relaxation.cpp)
     add_algobench_test(test_constraint_network tests/test_constraint_network.cpp)
+    add_algobench_test(test_combination_finder tests/test_combination_finder.cpp)
 
     add_test(
         NAME export_cost_matrix_smoke
@@ -416,6 +420,12 @@ configure_file(
 configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/execute_constraint_network_all_sweeps_and_analyze.bat
     ${CMAKE_CURRENT_BINARY_DIR}/execute_constraint_network_all_sweeps_and_analyze.bat
+    COPYONLY
+)
+
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/execute_combination_finder_all_sweeps_and_analyze.bat
+    ${CMAKE_CURRENT_BINARY_DIR}/execute_combination_finder_all_sweeps_and_analyze.bat
     COPYONLY
 )
 

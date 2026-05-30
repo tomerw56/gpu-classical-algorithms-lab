@@ -211,3 +211,24 @@ The canonical runner also invokes this script automatically. It visualizes valid
 The constraint-network phase includes both performance plots and problem-definition plots. The problem-definition exporter visualizes which task/resource pairs are compatible, which candidates are valid, and why candidates are rejected.
 
 See `docs/phase_04_constraint_network_problem_visualization.md`.
+
+## Phase 4.2: Combination finder
+
+`combination_finder` is the first Phase 4 combinatorial enumeration benchmark. It evaluates all unordered groups of size `k` from a generated item set and keeps aggregate outputs such as valid count, best score, and rejection reasons.
+
+The phase includes:
+
+- `docs/phase_04_combination_finder.md`
+- `docs/phase_04_combination_problem_definitions.md`
+- `execute_combination_finder_all_sweeps_and_analyze.bat`
+- `scripts/analyze_combination_finder_jsonl.py`
+- `scripts/plot_combination_finder_scaling.py`
+
+## Documentation organization update
+
+The project now has two top-level documentation entry points:
+
+- `documentation_index.md` - ordered map of the repository documentation, including setup, benchmark chapters, runners, analysis scripts, plots, and lecture reading order.
+- `literature_and_problem_definitions.md` - source-backed problem definitions and literature links for every featured benchmark family.
+
+Use these two files when preparing lectures or onboarding new readers.

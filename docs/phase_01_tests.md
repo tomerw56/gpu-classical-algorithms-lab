@@ -103,3 +103,12 @@ The weighted-relaxation runner includes an optional/default very-very-large rand
 
 
 The constraint-network sweep runner also invokes `scripts/plot_constraint_network_diagnostics.py` to produce data-understanding plots from the JSONL results.
+
+## Combination finder tests
+
+Phase 4.2 adds `test_combination_finder`, which checks:
+
+- small binomial counts,
+- lexicographic combination unranking,
+- CPU aggregate correctness,
+- benchmark result metadata for a tiny custom case.

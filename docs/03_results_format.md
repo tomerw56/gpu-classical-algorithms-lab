@@ -287,3 +287,24 @@ These are produced by the `gpu-delta-stepping` variant.
 ## `constraint_network` sweep labels
 
 The constraint-network runner passes `--set sweep_label=...` so the `preset` field in JSONL/reporting can show labels such as `cn_64k`, `cn_512k`, and `cn_4m`. The underlying benchmark size is still recorded explicitly in `input_size.tasks`, `input_size.resources`, and `input_size.candidates`.
+
+## `combination_finder` metadata
+
+The `combination_finder` benchmark writes aggregate metadata rather than returning every valid group:
+
+```text
+valid_count
+reference_valid_count
+invalid_count
+budget_violations
+risk_violations
+coverage_violations
+spread_violations
+checksum
+reference_checksum
+best_score
+reference_best_score
+best_rank
+```
+
+This is intentional: the benchmark demonstrates candidate-space throughput while avoiding output explosion.

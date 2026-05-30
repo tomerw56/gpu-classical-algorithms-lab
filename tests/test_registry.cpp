@@ -10,7 +10,7 @@ int main()
     auto registry = algobench::make_default_registry();
 
     const auto infos = registry.list();
-    TEST_CHECK_EQ(infos.size(), static_cast<std::size_t>(8));
+    TEST_CHECK_EQ(infos.size(), static_cast<std::size_t>(9));
 
     const auto foundation_it = std::find_if(infos.begin(), infos.end(), [](const algobench::BenchmarkInfo& info) {
         return info.name == "foundation_smoke";
@@ -92,6 +92,19 @@ int main()
     }
 
 
+
+
+    const auto combination_it = std::find_if(infos.begin(), infos.end(), [](const algobench::BenchmarkInfo& info) {
+        return info.name == "combination_finder";
+    });
+    TEST_CHECK(combination_it != infos.end());
+    if (combination_it != infos.end())
+    {
+        TEST_CHECK(!combination_it->description.empty());
+        TEST_CHECK_EQ(combination_it->presets.size(), static_cast<std::size_t>(4));
+        TEST_CHECK_EQ(combination_it->presets.front(), std::string("tiny"));
+    }
+
     const auto constraint_it = std::find_if(infos.begin(), infos.end(), [](const algobench::BenchmarkInfo& info) {
         return info.name == "constraint_network";
     });
@@ -154,6 +167,14 @@ int main()
     TEST_CHECK(graph_weighted_results.front().correct);
 
 
+
+
+    const auto combination_results = registry.run("combination_finder", config);
+    TEST_CHECK_EQ(combination_results.size(), static_cast<std::size_t>(1));
+    TEST_CHECK_EQ(combination_results.front().benchmark, std::string("combination_finder"));
+    TEST_CHECK_EQ(combination_results.front().variant, std::string("cpu"));
+    TEST_CHECK(combination_results.front().correct);
+
     const auto constraint_results = registry.run("constraint_network", config);
     TEST_CHECK_EQ(constraint_results.size(), static_cast<std::size_t>(1));
     TEST_CHECK_EQ(constraint_results.front().benchmark, std::string("constraint_network"));
@@ -161,7 +182,7 @@ int main()
     TEST_CHECK(constraint_results.front().correct);
 
     const auto all_results = registry.run("all", config);
-    TEST_CHECK_EQ(all_results.size(), static_cast<std::size_t>(8));
+    TEST_CHECK_EQ(all_results.size(), static_cast<std::size_t>(9));
     TEST_CHECK_EQ(all_results[0].benchmark, std::string("foundation_smoke"));
     TEST_CHECK_EQ(all_results[1].benchmark, std::string("polynomial_batch"));
     TEST_CHECK_EQ(all_results[2].benchmark, std::string("cost_matrix"));
@@ -170,6 +191,7 @@ int main()
     TEST_CHECK_EQ(all_results[5].benchmark, std::string("graph_connected_components"));
     TEST_CHECK_EQ(all_results[6].benchmark, std::string("graph_weighted_relaxation"));
     TEST_CHECK_EQ(all_results[7].benchmark, std::string("constraint_network"));
+    TEST_CHECK_EQ(all_results[8].benchmark, std::string("combination_finder"));
 
     TEST_CHECK_THROWS((void)registry.run("does_not_exist", config));
 
