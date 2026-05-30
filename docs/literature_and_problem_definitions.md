@@ -1,52 +1,28 @@
 # Literature and problem definitions
 
-This appendix collects the source-backed definitions and references used by the benchmark lab. It is meant to answer: **what problem are we demonstrating, where does the formal problem come from, and why is the CPU/GPU comparison interesting?**
+This file is the source-backed glossary for the GPU Classical Algorithms Lab. It defines the featured problem families and explains why each one was included in the benchmark suite.
 
-Links were checked while preparing this documentation patch. Prefer the named sources here over ad-hoc web searches when preparing the lecture.
-
-## How to read this appendix
-
-Each section contains:
-
-- **Problem definition** - the classical problem or computational pattern.
-- **Repository benchmark** - where it appears in this project.
-- **GPU lesson** - why the workload helps or hurts the GPU.
-- **References** - source-backed reading links.
+The references are intentionally practical and mostly introductory: they are meant to orient engineers preparing the lecture, not to be an exhaustive survey.
 
 ## CUDA / GPU programming model
 
 ### Problem definition
 
-CUDA is NVIDIA's programming platform for running parallel kernels on GPUs. The benchmark lab uses CUDA C++ kernels for all GPU variants and records both kernel time and end-to-end GPU time.
+CUDA exposes a model where many lightweight GPU threads execute kernels over data-parallel work. The key design question in this project is whether a classical workload can be expressed as many independent or loosely coupled work items with limited synchronization and controlled output size.
 
-### Repository use
+### Repository relevance
 
-Used throughout:
-
-- `foundation_smoke`
-- `polynomial_batch`
-- `cost_matrix`
-- `spatial_events`
-- `graph_bfs`
-- `graph_connected_components`
-- `graph_weighted_relaxation`
-- `constraint_network`
-- `combination_finder`
-
-### GPU lesson
-
-A GPU is strongest when the workload exposes many independent or regular operations and weakest when synchronization, divergence, atomics, or CPU/GPU transfers dominate.
+All GPU variants in the project are CUDA implementations. The timing methodology separates total GPU time from kernel time where possible.
 
 ### References
 
-- NVIDIA CUDA C++ Programming Guide: https://docs.nvidia.com/cuda/cuda-programming-guide/
-- CUDA C++ Programming Guide PDF: https://docs.nvidia.com/cuda/pdf/CUDA_C_Programming_Guide.pdf
+- CUDA C++ Programming Guide: https://docs.nvidia.com/cuda/cuda-programming-guide/index.html
 
-## Polynomial batch evaluation
+## Polynomial evaluation
 
 ### Problem definition
 
-Polynomial evaluation computes `p(x)` for a polynomial and one or more values of `x`. The benchmark uses Horner's method to evaluate a degree-15 polynomial over many independent `x` values.
+Evaluating a polynomial for many independent input values is a dense data-parallel workload. Horner's method is a standard way to evaluate polynomials efficiently by rewriting nested multiplications/additions.
 
 ### Repository benchmark
 
@@ -55,38 +31,41 @@ Polynomial evaluation computes `p(x)` for a polynomial and one or more values of
 
 ### GPU lesson
 
-This is an embarrassingly parallel workload: each `x` value is independent. It is a clean positive GPU example once there are enough values to amortize launch and transfer overhead.
+This is a clean positive GPU case: one independent polynomial evaluation per `x` value.
 
 ### References
 
 - Horner's method: https://en.wikipedia.org/wiki/Horner%27s_method
-- Polynomial evaluation: https://en.wikipedia.org/wiki/Polynomial_evaluation
+- Polynomial: https://en.wikipedia.org/wiki/Polynomial
 
-## Cost matrix generation and assignment-style scoring
+## Cost matrix / assignment-style scoring
 
 ### Problem definition
 
-Many assignment and dispatch systems start by generating a cost or feasibility matrix `cost[task][resource]`. The global assignment problem asks how to assign agents/resources to tasks with minimal cost under constraints.
+Many optimization systems compute a task/resource cost matrix before solving a downstream assignment or scheduling problem. Each cell represents the score or cost of pairing one task with one resource.
 
-### Repository benchmark
+### Repository benchmarks
 
 - `cost_matrix`
-- Docs: `docs/cost_matrix.md`, `docs/phase_02_cost_matrix.md`
+- `assignment_preprocessing`
+- Docs: `docs/cost_matrix.md`, `docs/assignment_preprocessing.md`, `docs/phase_04_assignment_preprocessing.md`
 
 ### GPU lesson
 
-Cost-matrix generation is a strong GPU candidate because every task-resource cell can be scored independently. Branches still matter: skill checks, feasibility rules, and penalty tiers can introduce warp divergence.
+Dense task/resource cell scoring is a strong GPU fit. The assignment-preprocessing phase adds a practical reduction: keep only top-K feasible resources per task instead of handing the full dense matrix to a CPU solver.
 
 ### References
 
 - Assignment problem: https://en.wikipedia.org/wiki/Assignment_problem
 - Hungarian algorithm: https://en.wikipedia.org/wiki/Hungarian_algorithm
+- CP-Algorithms, Hungarian algorithm: https://cp-algorithms.com/graph/hungarian-algorithm.html
+- Selection algorithm / top-k concept: https://en.wikipedia.org/wiki/Selection_algorithm
 
 ## Spatial event detection
 
 ### Problem definition
 
-Spatial event detection tests moving objects against regions: entering a zone, leaving it, staying inside, or crossing through it. The benchmark uses track segments and circular zones.
+Spatial event detection tests geometric relationships such as whether a track segment enters, exits, stays inside, or crosses through a zone.
 
 ### Repository benchmark
 
@@ -95,82 +74,80 @@ Spatial event detection tests moving objects against regions: entering a zone, l
 
 ### GPU lesson
 
-Track-zone pairs are independent, so the pairwise matrix maps naturally to GPU threads. The output can still be large, so the useful output should usually be compacted, counted, or summarized.
+The benchmark is a dense pairwise geometry problem: many track/zone pairs can be evaluated independently.
 
 ### References
 
-- Computational geometry overview: https://en.wikipedia.org/wiki/Computational_geometry
-- Point in polygon: https://en.wikipedia.org/wiki/Point_in_polygon
-- Collision detection overview: https://en.wikipedia.org/wiki/Collision_detection
+- Computational geometry: https://en.wikipedia.org/wiki/Computational_geometry
+- Line segment intersection: https://en.wikipedia.org/wiki/Line_segment_intersection
 
 ## CSR graph representation
 
 ### Problem definition
 
-Compressed sparse row (CSR) stores sparse adjacency data using row offsets and column indices. It is a common layout for sparse matrices and graph adjacency lists.
+Compressed Sparse Row (CSR) stores sparse adjacency data using row offsets and column indices. It is common for sparse matrices and graph adjacency structures.
 
-### Repository benchmark
+### Repository benchmark/support
 
 - `graph_foundation`
-- Used by BFS, connected components, and weighted relaxation.
 - Docs: `docs/graph_foundation.md`, `docs/phase_03_graph_foundation.md`
 
 ### GPU lesson
 
-CSR is compact and GPU-friendly for edge scans, but irregular degree distribution can cause load imbalance.
+CSR is compact and GPU-friendly for sequential adjacency ranges, but graph algorithms still depend heavily on frontier width, degree distribution, memory locality, and synchronization.
 
 ### References
 
-- Sparse matrix / CSR background: https://en.wikipedia.org/wiki/Sparse_matrix
-- Gunrock graph algorithms list, including BFS and connected components: https://gunrock.github.io/gunrock/gunrock.wiki/Graph-Algorithms.html
+- Sparse matrix: https://en.wikipedia.org/wiki/Sparse_matrix
+- Compressed sparse row: https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_row_(CSR,_CRS_or_Yale_format)
 
-## Breadth-first search / reachability
+## BFS / reachability
 
 ### Problem definition
 
-Breadth-first search explores graph vertices level by level. It is used for reachability and unweighted shortest-path distance.
+Breadth-first search explores a graph in levels from a source vertex. It is central to reachability, shortest paths in unweighted graphs, and graph traversal.
 
 ### Repository benchmark
 
 - `graph_bfs`
-- Docs: `docs/graph_bfs.md`, `docs/phase_03_graph_bfs_analysis.md`, `docs/phase_03_graph_bfs_shape_scaling.md`
+- Docs: `docs/graph_bfs.md`, `docs/phase_03_graph_bfs_shape_scaling.md`, `docs/phase_03_graph_bfs_frontier_anatomy.md`
 
 ### GPU lesson
 
-BFS is a counterexample to "graph = GPU win." Chain and grid graphs have many synchronization levels and/or narrow frontiers. Large random graphs can be better because they expose wide frontiers and low depth.
+Graph size alone is insufficient. Chain/grid graphs expose little useful parallel frontier work; large random graphs expose broad frontiers and can be GPU-friendly.
 
 ### References
 
 - Breadth-first search: https://en.wikipedia.org/wiki/Breadth-first_search
-- Merrill, Garland, Grimshaw, *Scalable GPU Graph Traversal*: https://research.nvidia.com/sites/default/files/pubs/2012-02_Scalable-GPU-Graph/ppo213s-merrill.pdf
-- Michael Garland's page for the same BFS work: https://mgarland.org/papers/2012/bfs/
+- Merrill, Garland, Grimshaw, scalable GPU graph traversal: https://research.nvidia.com/publication/2012-02_scalable-gpu-graph-traversal
+- Beamer et al., direction-optimizing BFS: https://scottbeamer.net/pubs/beamer-sc2012.pdf
 
-## Connected components
+## Connected components / Union-Find
 
 ### Problem definition
 
-A connected component is a maximal connected subgraph. For undirected graphs, connected-components algorithms partition vertices into disjoint groups.
+Connected components partition a graph into groups of mutually reachable vertices. Union-Find / Disjoint Set Union is a classic CPU-friendly structure for this task.
 
 ### Repository benchmark
 
 - `graph_connected_components`
-- Docs: `docs/graph_connected_components.md`, `docs/phase_03_graph_connected_components_scaling.md`, `docs/phase_03_graph_connected_components_non_naive.md`
+- Docs: `docs/graph_connected_components.md`, `docs/phase_03_graph_connected_components_non_naive.md`
 
 ### GPU lesson
 
-The CPU Union-Find baseline is strong. Naive GPU label propagation can lose because it needs repeated global iterations. The non-naive root-hooking / pointer-jumping variant improves the GPU story on mixed and chain-like cases.
+The naive GPU label-propagation variant is useful but not enough. The non-naive root-hooking and pointer-jumping variant is much stronger, especially on mixed/chain-like anatomy, but graph structure still matters.
 
 ### References
 
-- Connected components: https://en.wikipedia.org/wiki/Component_%28graph_theory%29
-- Disjoint-set / Union-Find data structure: https://en.wikipedia.org/wiki/Disjoint-set_data_structure
-- Gunrock paper, evaluating BFS, SSSP, CC, and PageRank: https://arxiv.org/pdf/1501.05387
+- Connected component: https://en.wikipedia.org/wiki/Component_(graph_theory)
+- Disjoint-set data structure / Union-Find: https://en.wikipedia.org/wiki/Disjoint-set_data_structure
+- ECL-CC GPU connected components paper: https://userweb.cs.txstate.edu/~mb92/papers/hpdc18.pdf
 
-## Weighted shortest paths / SSSP
+## Weighted shortest paths / Dijkstra / delta-stepping
 
 ### Problem definition
 
-The shortest path problem asks for a path minimizing total edge weight. Dijkstra's algorithm solves single-source shortest paths for nonnegative weights.
+Weighted shortest path finds minimum-cost paths from a source to graph vertices. Dijkstra's algorithm is a strong CPU baseline for non-negative weights. Delta-stepping is a parallel shortest-path approach based on distance buckets and light/heavy edge treatment.
 
 ### Repository benchmark
 
@@ -179,20 +156,20 @@ The shortest path problem asks for a path minimizing total edge weight. Dijkstra
 
 ### GPU lesson
 
-Weighted shortest path is the strongest negative/nuanced graph example in this repository. CPU Dijkstra wins for chain/grid/layered and small random graphs. GPU global edge relaxation wins only on sufficiently large random graphs. Frontier and delta-style GPU variants were educational but not the recommended winners in this project.
+This is the strongest counterexample in the project. CPU Dijkstra remains best for chain/grid/layered/small random graphs. GPU global relaxation wins only for sufficiently large low-diameter random graphs. Frontier, delta, and light/heavy delta variants were useful educational attempts, but not recommended winners in this implementation.
 
 ### References
 
-- Shortest path problem: https://en.wikipedia.org/wiki/Shortest_path_problem
 - Dijkstra's algorithm: https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
-- Meyer and Sanders, *Delta-stepping: a parallelizable shortest path algorithm*: https://www.sciencedirect.com/science/article/pii/S0196677403000762
-- Delta-stepping paper copy: https://ae.iti.kit.edu/sanders/papers/wmain.pdf
+- Bellman-Ford algorithm: https://en.wikipedia.org/wiki/Bellman%E2%80%93Ford_algorithm
+- Delta-stepping: https://en.wikipedia.org/wiki/Parallel_single-source_shortest_path_algorithm#Delta_stepping_algorithm
+- Original delta-stepping paper: https://www.sciencedirect.com/science/article/pii/S0196677403000762
 
-## Constraint satisfaction and candidate validation
+## Constraint satisfaction / candidate validation
 
 ### Problem definition
 
-A constraint satisfaction problem has variables, domains, and constraints. A candidate assignment is valid when it satisfies the relevant constraints. The repository uses this idea in a practical dispatch form: candidate task-resource assignments are checked against skills, capacity, time windows, distance, forbidden zones, and risk.
+Constraint satisfaction asks whether assignments satisfy rules such as skill compatibility, capacity, time windows, distance, forbidden zones, and risk tolerance.
 
 ### Repository benchmark
 
@@ -201,18 +178,18 @@ A constraint satisfaction problem has variables, domains, and constraints. A can
 
 ### GPU lesson
 
-Candidate validation is highly GPU-friendly when candidates are independent. This benchmark is a practical positive example after the graph counterexamples.
+Candidate validation is a strong GPU-support workload: each candidate can be evaluated independently, and outputs can be summarized as validity counts, violation masks, and penalties.
 
 ### References
 
 - Constraint satisfaction problem: https://en.wikipedia.org/wiki/Constraint_satisfaction_problem
-- Constraint satisfaction: https://en.wikipedia.org/wiki/Constraint_satisfaction
+- Constraint programming: https://en.wikipedia.org/wiki/Constraint_programming
 
-## Combination finding / candidate enumeration
+## Combination finding / exhaustive enumeration
 
 ### Problem definition
 
-A `k`-combination is an unordered selection of `k` elements from a set of `n` elements. The number of possible combinations grows as a binomial coefficient, which quickly creates combinatorial explosion.
+A k-combination is a selection of k elements from n elements without regard to order. The number of possible combinations grows as a binomial coefficient, creating combinatorial explosion.
 
 ### Repository benchmark
 
@@ -221,7 +198,7 @@ A `k`-combination is an unordered selection of `k` elements from a set of `n` el
 
 ### GPU lesson
 
-The GPU can evaluate many combinations independently, but the output must be controlled: count, reduce, or keep summaries rather than copying every valid combination back.
+The GPU can evaluate many combinations independently, but output must be controlled: count, reduce, or keep summaries rather than copying every valid combination back.
 
 ### References
 
@@ -231,106 +208,68 @@ The GPU can evaluate many combinations independently, but the output must be con
 - Brute-force / exhaustive search: https://en.wikipedia.org/wiki/Brute-force_search
 - Backtracking: https://en.wikipedia.org/wiki/Backtracking
 
-
-## Assignment preprocessing / top-K candidate reduction
+## Local-search move evaluation
 
 ### Problem definition
 
-The classical assignment problem assigns agents to tasks with a cost for each pairing. In matrix form, the cost matrix entry represents the cost of assigning one worker/resource to one job/task. Algorithms such as the Hungarian algorithm solve a global assignment objective over that matrix.
-
-The repository's `assignment_preprocessing` benchmark focuses on a step that often comes before the final solver: evaluate a large task/resource feasibility-cost matrix, discard infeasible pairings, and retain only the top-K feasible resources per task.
-
-The plotting-only workflow (`execute_assignment_preprocessing_plots.bat`) is not a separate mathematical problem; it is an inspection layer for the same assignment-preprocessing model. It regenerates the timing figures and the small problem-definition visualizations showing feasibility, cost, and top-K candidate reduction.
+Local search moves from one candidate solution to neighboring solutions by applying local changes. In many solvers, a major cost is evaluating a large neighborhood of possible moves.
 
 ### Repository benchmark
 
-- `assignment_preprocessing`
-- Docs: `docs/assignment_preprocessing.md`, `docs/phase_04_assignment_preprocessing.md`
+- `local_search_moves`
+- Docs: `docs/local_search_moves.md`, `docs/phase_04_local_search_moves.md`, `docs/phase_04_local_search_moves_speedup_plateau.md`
 
 ### GPU lesson
 
-This is a strong practical GPU candidate because task/resource pair scoring is dense and independent. The important output-reduction idea is to avoid copying or solving the full dense matrix when a smaller sparse top-K candidate graph is enough for downstream assignment logic.
+The benchmark focuses on move scoring, not a full metaheuristic. GPU speedup rises until launch/copy/reduction overhead is amortized, then stabilizes at a steady throughput ratio.
 
 ### References
 
-- Assignment problem: https://en.wikipedia.org/wiki/Assignment_problem
-- Hungarian algorithm: https://en.wikipedia.org/wiki/Hungarian_algorithm
-- Hungarian algorithm, CP-Algorithms: https://cp-algorithms.com/graph/hungarian-algorithm.html
-- Top-k selection overview: https://en.wikipedia.org/wiki/Selection_algorithm
-- CUDA C++ Programming Guide: https://docs.nvidia.com/cuda/cuda-programming-guide/index.html
-
-## Planned / roadmap topics
-
-These topics were part of the original roadmap and are useful for the lecture even if not all are fully implemented yet.
-
-### Assignment preprocessing
-
-Status: implemented in `assignment_preprocessing`. The full solver remains downstream/roadmap work, but the dense feasibility/cost/top-K preprocessing stage is now covered.
-
-### Local-search optimization
-
-Problem: repeatedly evaluate neighboring solutions such as swaps, insertions, or 2-opt moves. GPU can score many candidate moves while CPU controls the sequential search loop.
-
-References:
-
-- Local search: https://en.wikipedia.org/wiki/Local_search_%28optimization%29
+- Local search in optimization: https://en.wikipedia.org/wiki/Local_search_(optimization)
+- 2-opt: https://en.wikipedia.org/wiki/2-opt
 - Local search heuristics for multidimensional assignment: https://arxiv.org/abs/0806.3258
 
-### Scenario simulation / robust planning
+## Scenario simulation / robust planning
 
-Problem: evaluate one plan across many possible scenarios. This is often naturally parallel because each scenario can be simulated independently.
+### Problem definition
 
-References:
+Scenario simulation evaluates one plan under many possible worlds: resource failure, demand spikes, delays, cost/risk changes, and weather-like penalties. It is related to Monte Carlo simulation and optimization under uncertainty.
+
+### Repository benchmark
+
+- `scenario_simulation`
+- Docs: `docs/scenario_simulation.md`, `docs/phase_04_scenario_simulation.md`, `docs/phase_04_scenario_simulation_feasibility_calibration_v2.md`
+
+### GPU lesson
+
+This is one of the strongest positive GPU examples: many independent scenarios map directly to GPU threads, and the calibrated model now separates CPU/GPU correctness from robust-plan feasibility.
+
+### References
 
 - Monte Carlo method: https://en.wikipedia.org/wiki/Monte_Carlo_method
+- Robust optimization: https://en.wikipedia.org/wiki/Robust_optimization
+- Stochastic programming: https://en.wikipedia.org/wiki/Stochastic_programming
 
-## Summary: what the literature supports in our project
+## Final lecture package
 
-The references support the same conclusion as the benchmark results:
+The final lecture package does not introduce a new mathematical problem. It organizes the completed problem families into a teaching sequence:
 
-1. Dense independent evaluation is a natural GPU fit.
-2. Graph traversal is hard because memory access and work distribution are irregular.
-3. Strong CPU baselines such as Union-Find and Dijkstra can beat simple GPU adaptations.
-4. GPU graph wins usually require algorithms designed for the hardware, not merely ported loops.
-5. Candidate scoring, validation, enumeration, and simulation are often better practical GPU entry points for classical algorithm teams.
+1. dense independent workloads where GPU helps immediately,
+2. graph workloads where anatomy and CPU baselines matter,
+3. optimization-support workloads where GPU acts as a scorer, validator, reducer, or simulator.
 
+Use these files together:
 
-## Local-search move evaluation
+- `docs/lecture_packaging.md`
+- `docs/live_demo_script.md`
+- `docs/final_benchmark_conclusions.md`
+- `docs/gpu_decision_guide.md`
+- `docs/final_report_outline.md`
 
-Local search is a family of heuristic optimization methods that move from one candidate solution to a neighboring candidate solution by applying local changes. This benchmark models the neighborhood-evaluation stage: many possible moves are scored independently, then a solver can choose which move to apply.
+## Summary: what the literature and benchmarks support
 
-Related references:
-
-- Local search in optimization: https://en.wikipedia.org/wiki/Local_search_(optimization)
-- 2-opt as a classic local-search move for route/TSP-style problems: https://en.wikipedia.org/wiki/2-opt
-- CUDA programming model: https://docs.nvidia.com/cuda/cuda-programming-guide/index.html
-
-In this project, `local_search_moves` does not implement a full metaheuristic. It focuses on the GPU-friendly inner loop: evaluating a large neighborhood of independent candidate moves.
-
-
-## Local-search plotting-only note
-
-The plotting-only workflow (`execute_local_search_moves_plots.bat`) is not a separate mathematical problem; it is an inspection layer for the same local-search move-evaluation model. It regenerates the timing figures and the small problem-definition visualizations showing the current assignment, candidate moves, and move-delta distribution.
-
-
-## Local-search speedup plateau note
-
-The local-search speedup plateau is a performance-observation note rather than a new mathematical problem definition. It follows from the benchmark shape: a fixed amount of work per independent move, GPU launch/copy/reduction overhead at small sizes, and steady GPU throughput at large sizes. It belongs with the local-search / neighborhood-evaluation discussion.
-
-
-## Scenario-simulation sweep-size note
-
-The scenario-simulation benchmark is a Monte-Carlo/what-if evaluation style workload. The implementation keeps the default sweep practical: it stops at `sc_4m`, and the old `sc_16m` stress point was removed. This does not change the problem definition or literature references; it only keeps the generated experiment suitable for normal lecture/demo execution.
-
-
-## Scenario feasibility calibration note
-
-The scenario-simulation benchmark uses Monte Carlo-style scenario evaluation as an educational robust-planning workload. The `correct` field is an implementation-validation field: it checks CPU/GPU agreement. It should not be confused with robust feasibility or solution quality. Robustness is represented by feasible ratio, violation counts, score distribution, and robustness score.
-
-
-Scenario simulation feasibility calibration v2: see `docs/phase_04_scenario_simulation_feasibility_calibration_v2.md`.
-
-
-## Final lecture-package note
-
-The final lecture package does not introduce a new mathematical problem. It organizes the problem definitions already covered in this file into a teaching sequence: dense data-parallel examples, graph counterexamples, and optimization-support workloads. Use `docs/lecture_packaging.md`, `docs/final_benchmark_conclusions.md`, and `docs/gpu_decision_guide.md` together with this literature appendix.
+1. Dense independent evaluation is the cleanest GPU fit.
+2. Graph traversal and weighted shortest path are difficult because of irregular memory access, synchronization, and strong CPU baselines.
+3. GPU graph wins usually require algorithms designed for the hardware, not merely ported loops.
+4. Candidate scoring, validation, enumeration, local move evaluation, and scenario simulation are often better practical GPU entry points for classical algorithm teams.
+5. The recommended real-world pattern is often hybrid: CPU controls the solver, GPU evaluates or reduces large candidate spaces.

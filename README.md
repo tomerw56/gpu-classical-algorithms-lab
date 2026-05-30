@@ -2,7 +2,7 @@
 
 A C++/CUDA benchmark playground for testing where GPU acceleration helps classical algorithmic workloads: graph theory, constraint checking, cost matrices, spatial events, combinations, local search, and scenario simulation.
 
-This repository is currently in **Phase 4.3: assignment preprocessing**, after completing the Phase 3 graph studies, the Phase 4.1 constraint-network benchmark, and the Phase 4.2 combination-finder benchmark.
+This repository is now **feature-complete for the lecture/demo package** after Phase 4.5. It includes dense data-parallel examples, graph algorithms, optimization-support workloads, final conclusions, and a curated live-demo runner.
 
 
 ## Documentation map
@@ -10,7 +10,7 @@ This repository is currently in **Phase 4.3: assignment preprocessing**, after c
 The documentation is now organized through two index files:
 
 - `docs/documentation_index.md` - ordered map of the repository docs, runners, benchmark chapters, and lecture reading path.
-- `docs/literature_and_problem_definitions.md` - source-backed problem definitions and literature links for all featured benchmark families: polynomial evaluation, cost/assignment scoring, spatial event detection, CSR graphs, BFS, connected components, weighted shortest paths, constraint satisfaction, and combination enumeration, and assignment preprocessing.
+- `docs/literature_and_problem_definitions.md` - source-backed problem definitions and literature links for all featured benchmark families: polynomial evaluation, cost/assignment scoring, spatial event detection, CSR graphs, BFS, connected components, weighted shortest paths, constraint satisfaction, combination enumeration, assignment preprocessing, local search, and scenario simulation.
 
 Recommended first read:
 
@@ -19,6 +19,8 @@ docs/documentation_index.md
 docs/literature_and_problem_definitions.md
 docs/01_benchmarking_methodology.md
 docs/02_gpu_pitfalls.md
+docs/final_benchmark_conclusions.md
+docs/gpu_decision_guide.md
 ```
 
 The current codebase includes:
@@ -916,7 +918,7 @@ The phase docs are:
 `docs/phase_04_scenario_simulation_feasibility_calibration.md` explains that scenario `correct=yes` means CPU/GPU agreement, not that the plan is feasible. The calibrated scenario generator now aims to produce a mix of feasible and infeasible scenarios for better robust-planning interpretation.
 
 
-Scenario simulation feasibility calibration v2: see `docs/phase_04_scenario_simulation_feasibility_calibration_v2.md`.
+For the final scenario calibration notes, see `docs/phase_04_scenario_simulation_feasibility_calibration_v2.md`.
 
 
 ## Final lecture package
@@ -950,3 +952,8 @@ docs/gpu_decision_guide.md
 ## Lecture demo runner fix
 
 If `execute_lecture_demo_core.bat` prints usage/help for every benchmark instead of running them, see `docs/lecture_demo_runner_fix.md`. The fixed runner passes benchmark arguments as a quoted command fragment and echoes each command before execution.
+
+
+## Documentation review note
+
+The final cleanup pass is summarized in `docs/documentation_review_notes.md`.

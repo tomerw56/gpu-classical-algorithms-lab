@@ -240,11 +240,10 @@ results/graph_weighted_relaxation_backend_recommendations/
 Important files:
 
 - `graph_weighted_relaxation_backend_recommendations.csv`
-- `graph_weighted_relaxation_backend_recommendations.md`
+- `results\graph_weighted_relaxation_backend_recommendations\graph_weighted_relaxation_backend_recommendations.md`
 - `graph_wr_backend_recommendations.png`
 
-These files summarize the fastest measured backend among `cpu`, `gpu`, and
-`gpu-frontier` for each graph family and size.
+These files summarize the fastest measured backend among the weighted-relaxation variants that are present in the JSONL, including `cpu`, `gpu`, `gpu-frontier`, `gpu-delta-stepping`, and `gpu-delta-light-heavy`.
 
 
 ## Weighted-relaxation delta-stepping fields
