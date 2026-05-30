@@ -308,3 +308,68 @@ best_rank
 ```
 
 This is intentional: the benchmark demonstrates candidate-space throughput while avoiding output explosion.
+
+## Assignment preprocessing metadata
+
+`assignment_preprocessing` rows include dense-pair and reduced-output metadata:
+
+```text
+feasible_pair_count
+infeasible_pair_count
+selected_candidate_count
+tasks_with_any_candidate
+candidate_reduction_ratio
+skill_violations
+capacity_violations
+time_violations
+distance_violations
+zone_violations
+risk_violations
+selected_cost_checksum
+best_cost_sum
+mean_selected_cost
+selected_resource_mismatches
+max_abs_error
+max_rel_error
+```
+
+The key reduction metric is:
+
+```text
+candidate_reduction_ratio = selected_candidate_count / (task_count * resource_count)
+```
+
+A small ratio means the preprocessing stage successfully converts a dense task/resource matrix into a much smaller candidate graph for downstream assignment logic.
+
+
+## `local_search_moves` metadata
+
+Important metadata fields include:
+
+- `valid_moves` / `invalid_moves`
+- `improving_moves`
+- `best_move_index` and `best_delta`
+- violation counts: `skill_violations`, `capacity_violations`, `distance_violations`, `risk_violations`, `no_change_violations`
+- validation fields: `max_abs_error`, `max_rel_error`, mismatch counts
+
+
+## Scenario simulation metadata
+
+`scenario_simulation` rows include:
+
+- `tasks`, `resources`, `scenarios` in `input_size`
+- `feasible_scenarios`
+- `infeasible_scenarios`
+- `failure_scenarios`
+- `capacity_scenarios`
+- `risk_scenarios`
+- `delay_scenarios`
+- `mean_score`, `best_score`, `worst_score`
+- `robustness_score`
+
+The robustness score is synthetic and is meant for teaching relative behavior across generated scenarios.
+
+
+## Scenario simulation correctness semantics
+
+For `scenario_simulation`, `correct=yes` means CPU/GPU agreement, not plan quality. Rows include metadata such as `correctness_semantics=cpu_gpu_agreement_not_plan_quality`, `feasibility_status`, and `feasible_ratio` to separate implementation correctness from robust-plan quality.

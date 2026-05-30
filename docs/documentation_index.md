@@ -154,6 +154,27 @@ Canonical command:
 execute_combination_finder_all_sweeps_and_analyze.bat
 ```
 
+
+### Assignment preprocessing
+
+| File | Purpose |
+|---|---|
+| `docs/assignment_preprocessing.md` | Implementation details for task/resource feasibility, cost scoring, and per-task top-K reduction. |
+| `docs/phase_04_assignment_preprocessing.md` | Phase narrative, benchmark interpretation, canonical runner, and output files. |
+| `docs/literature_and_problem_definitions.md` | Source-backed assignment/Hungarian/top-K definitions. |
+
+Canonical command:
+
+```bat
+execute_assignment_preprocessing_all_sweeps_and_analyze.bat
+```
+
+Plotting-only command, for regenerating figures from existing results:
+
+```bat
+execute_assignment_preprocessing_plots.bat
+```
+
 ## 6. Current live-demo commands by topic
 
 | Topic | Command |
@@ -165,6 +186,10 @@ execute_combination_finder_all_sweeps_and_analyze.bat
 | Weighted relaxation all sweeps | `execute_graph_weighted_relaxation_all_sweeps_and_analyze.bat` |
 | Constraint network all sweeps | `execute_constraint_network_all_sweeps_and_analyze.bat` |
 | Combination finder all sweeps | `execute_combination_finder_all_sweeps_and_analyze.bat` |
+| Assignment preprocessing all sweeps | `execute_assignment_preprocessing_all_sweeps_and_analyze.bat` |
+| Assignment preprocessing plots only | `execute_assignment_preprocessing_plots.bat` |
+| Local-search all sweeps | `execute_local_search_moves_all_sweeps_and_analyze.bat` |
+| Local-search plots only | `execute_local_search_moves_plots.bat` |
 
 ## 7. Recommended reading order for lecture preparation
 
@@ -178,5 +203,43 @@ execute_combination_finder_all_sweeps_and_analyze.bat
 8. `docs/appendix_graph_findings.md`
 9. `docs/constraint_network.md`
 10. `docs/phase_04_combination_finder.md`
+11. `docs/phase_04_assignment_preprocessing.md`
 
 This order tells the story cleanly: simple dense parallel wins, graph counterexamples, improved graph variants, and then practical optimization-support workloads.
+
+
+### Phase 4.4 - local-search move evaluation
+
+- `local_search_moves.md` - benchmark definition and CPU/GPU mapping.
+- `phase_04_local_search_moves.md` - runner, outputs, and interpretation.
+- Runner: `execute_local_search_moves_all_sweeps_and_analyze.bat`.
+- Plot-only rerun: `execute_local_search_moves_plots.bat`.
+- Speedup plateau explanation: `phase_04_local_search_moves_speedup_plateau.md`.
+
+
+### Local-search speedup plateau
+
+See `phase_04_local_search_moves_speedup_plateau.md` for why local-search GPU speedup rises and then stabilizes once the GPU reaches steady move-evaluation throughput.
+
+
+### Phase 4.5 - scenario simulation / robust planning
+
+- Overview: `docs/scenario_simulation.md`
+- Phase notes: `docs/phase_04_scenario_simulation.md`
+- Sweep-size note: `docs/phase_04_scenario_simulation_sweep_trim.md`
+- Runner: `execute_scenario_simulation_all_sweeps_and_analyze.bat`
+- Plot-only rerun: `execute_scenario_simulation_plots.bat`
+
+Use this phase to show GPU-assisted robust plan evaluation across many independent uncertainty scenarios.
+
+
+| Scenario simulation all sweeps | `execute_scenario_simulation_all_sweeps_and_analyze.bat` |
+| Scenario simulation plots only | `execute_scenario_simulation_plots.bat` |
+
+
+### Scenario simulation sweep trim
+
+The default scenario-simulation sweep stops at `sc_4m`; `sc_16m` was removed because it was too slow for the normal proof/demo flow. See `docs/phase_04_scenario_simulation_sweep_trim.md`.
+
+
+- Scenario feasibility calibration: `phase_04_scenario_simulation_feasibility_calibration.md` - explains `correct` versus robust-plan quality and the mixed feasible/infeasible calibration.

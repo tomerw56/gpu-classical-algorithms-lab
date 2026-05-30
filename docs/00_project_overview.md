@@ -232,3 +232,31 @@ The project now has two top-level documentation entry points:
 - `literature_and_problem_definitions.md` - source-backed problem definitions and literature links for every featured benchmark family.
 
 Use these two files when preparing lectures or onboarding new readers.
+
+## Phase 4.3: Assignment preprocessing
+
+`assignment_preprocessing` evaluates dense task/resource feasibility and cost, then reduces each task to a top-K resource candidate list. It is a practical bridge between the earlier cost-matrix and constraint-network benchmarks and a downstream assignment solver.
+
+The phase includes:
+
+- `docs/assignment_preprocessing.md`
+- `docs/phase_04_assignment_preprocessing.md`
+- `execute_assignment_preprocessing_all_sweeps_and_analyze.bat`
+- `scripts/analyze_assignment_preprocessing_jsonl.py`
+- `scripts/plot_assignment_preprocessing_scaling.py`
+- `apps/export_assignment_preprocessing.cpp`
+- `scripts/plot_assignment_preprocessing_problem.py`
+
+The literature and documentation index files were updated for this phase as part of the project rule that every new feature should update `docs/documentation_index.md` and `docs/literature_and_problem_definitions.md` when relevant.
+
+
+## Phase 4.4 - local-search move evaluation
+
+Adds `local_search_moves`, a GPU-assisted neighborhood-scoring benchmark for optimization workflows.
+
+
+## Phase 4.5 - scenario simulation / robust planning
+
+Phase 4.5 adds `scenario_simulation`, a robust-planning workload that evaluates one fixed assignment plan under many independent uncertainty scenarios. It includes CPU/GPU implementations, `execute_scenario_simulation_all_sweeps_and_analyze.bat`, `execute_scenario_simulation_plots.bat`, analysis scripts, scaling plots, and a small problem exporter/plotter.
+
+This phase is intended as a positive optimization-support example: GPU acceleration is useful when many independent possible worlds must be evaluated for the same plan.

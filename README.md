@@ -2,7 +2,7 @@
 
 A C++/CUDA benchmark playground for testing where GPU acceleration helps classical algorithmic workloads: graph theory, constraint checking, cost matrices, spatial events, combinations, local search, and scenario simulation.
 
-This repository is currently in **Phase 4.2: combination finder / candidate enumeration**, after completing the Phase 3 graph studies and Phase 4.1 constraint-network benchmark.
+This repository is currently in **Phase 4.3: assignment preprocessing**, after completing the Phase 3 graph studies, the Phase 4.1 constraint-network benchmark, and the Phase 4.2 combination-finder benchmark.
 
 
 ## Documentation map
@@ -10,7 +10,7 @@ This repository is currently in **Phase 4.2: combination finder / candidate enum
 The documentation is now organized through two index files:
 
 - `docs/documentation_index.md` - ordered map of the repository docs, runners, benchmark chapters, and lecture reading path.
-- `docs/literature_and_problem_definitions.md` - source-backed problem definitions and literature links for all featured benchmark families: polynomial evaluation, cost/assignment scoring, spatial event detection, CSR graphs, BFS, connected components, weighted shortest paths, constraint satisfaction, and combination enumeration.
+- `docs/literature_and_problem_definitions.md` - source-backed problem definitions and literature links for all featured benchmark families: polynomial evaluation, cost/assignment scoring, spatial event detection, CSR graphs, BFS, connected components, weighted shortest paths, constraint satisfaction, and combination enumeration, and assignment preprocessing.
 
 Recommended first read:
 
@@ -35,6 +35,10 @@ The current codebase includes:
 - A small `foundation_smoke` benchmark to verify the infrastructure.
 - `cuda_probe` diagnostic executable.
 - `execute_all_tests.bat` to run the current test/benchmark suite from one command.
+
+- `assignment_preprocessing`: dense task/resource feasibility and cost scoring followed by per-task top-K candidate reduction.
+- `execute_assignment_preprocessing_all_sweeps_and_analyze.bat`, the canonical assignment-preprocessing sweep/analyze/plot runner.
+- `export_assignment_preprocessing`: inspectable CSV exporter used by the assignment problem plotting utility.
 - `execute_graph_bfs_all_sweeps_and_analyze.bat`, the single canonical BFS sweep/analyze/plot runner. It runs both the layered scale study and the chain/grid/layered/random shape × scale study.
 - `graph_connected_components`: CPU Union-Find versus CUDA iterative label propagation over disconnected CSR graph families.
 - `execute_graph_connected_components_all_sweeps_and_analyze.bat`, the single canonical connected-components sweep/analyze/plot runner. It runs chains, grids, random clusters, and mixed components across increasing sizes.
@@ -87,6 +91,25 @@ Older split BFS batch wrappers were intentionally retired so there is only one b
 #### Note on BFS anatomy plots and older JSONL files
 
 `plot_graph_bfs_shape_scaling.py` supports both new and older BFS sweep files. Newer runs contain exact frontier-anatomy metadata such as `mean_frontier_edge_visits`. Older runs may not. In that case, the plotter derives fallback estimates from `max_distance`, `reached_count`, and `mean_out_degree` so the “useful work per synchronization point” plot is still meaningful. Exact max-frontier plots are skipped when the required exact data is unavailable.
+
+
+### Assignment preprocessing
+
+Run the complete Phase 4.3 assignment-preprocessing flow with:
+
+```bat
+execute_assignment_preprocessing_all_sweeps_and_analyze.bat
+```
+
+This evaluates dense task/resource feasibility and cost, reduces each task to top-K feasible resources, writes analysis/plots, and exports one inspectable problem instance with feasibility/cost matrices.
+
+Key docs:
+
+```text
+docs/assignment_preprocessing.md
+docs/phase_04_assignment_preprocessing.md
+docs/literature_and_problem_definitions.md
+```
 
 ## Build
 
@@ -417,7 +440,7 @@ Benchmark repeats are for timing only. Validation metadata such as `checksum` sh
 
 ## Current CTest suite
 
-The project currently builds eleven dependency-free C++ test executables, plus three exporter smoke tests registered directly with CTest:
+The project currently builds dependency-free C++ test executables plus exporter smoke tests registered directly with CTest. The exact count grows with each benchmark phase; run `ctest -N` after configuring to list the current suite.
 
 ```text
 test_foundation
@@ -813,3 +836,81 @@ docs\phase_04_combination_problem_definitions.md
 ```
 
 It links to verified definitions for combinations, binomial coefficients, combinatorial explosion, brute-force search, backtracking, and CUDA.
+
+### Assignment preprocessing plotting-only workflow
+
+After running the assignment preprocessing sweep once, regenerate only the analysis and plots with:
+
+```bat
+execute_assignment_preprocessing_plots.bat
+```
+
+This reads:
+
+```text
+results\assignment_preprocessing_scale_sweep.jsonl
+```
+
+and regenerates the assignment analysis, scaling plots, and problem-definition visualizations without rerunning the expensive benchmark sweep.
+
+
+## Phase 4.4 - local-search move evaluation
+
+Benchmark: `local_search_moves`
+
+This phase evaluates many candidate neighborhood moves from a current assignment. It compares a CPU loop against a GPU one-thread-per-move evaluator.
+
+Run:
+
+```bat
+execute_local_search_moves_all_sweeps_and_analyze.bat
+```
+
+To regenerate local-search analysis and plots without rerunning the sweep, use:
+
+```bat
+execute_local_search_moves_plots.bat
+```
+
+Docs:
+
+- `docs/local_search_moves.md`
+- `docs/phase_04_local_search_moves.md`
+
+
+
+### Local-search speedup plateau
+
+If `local_search_moves` speedup rises and then stabilizes, see `docs/phase_04_local_search_moves_speedup_plateau.md`. The benchmark reaches a steady move-evaluation throughput: more moves keep the GPU busy, but the CPU/GPU ratio no longer grows much.
+
+
+## Phase 4.5 - scenario simulation / robust planning
+
+`scenario_simulation` evaluates one fixed plan under many independent uncertainty scenarios: resource failures, demand spikes, delays, cost/risk changes, and weather penalties.
+
+Run the full sweep:
+
+```bat
+execute_scenario_simulation_all_sweeps_and_analyze.bat
+```
+
+The default sweep is intentionally laptop/demo-friendly and stops at `sc_4m`.
+The old `sc_16m` stress point was removed because it took too long and did not add enough extra evidence.
+Set `INCLUDE_HEAVY_CASES=1` inside the runner only when you want to add the optional `sc_8m` stress point.
+
+Regenerate plots only:
+
+```bat
+execute_scenario_simulation_plots.bat
+```
+
+The phase docs are:
+
+- `docs/scenario_simulation.md`
+- `docs/phase_04_scenario_simulation.md`
+- `docs/phase_04_scenario_simulation_sweep_trim.md`
+
+
+### Scenario simulation calibration note
+
+`docs/phase_04_scenario_simulation_feasibility_calibration.md` explains that scenario `correct=yes` means CPU/GPU agreement, not that the plan is feasible. The calibrated scenario generator now aims to produce a mix of feasible and infeasible scenarios for better robust-planning interpretation.

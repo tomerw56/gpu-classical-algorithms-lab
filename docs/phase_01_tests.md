@@ -112,3 +112,48 @@ Phase 4.2 adds `test_combination_finder`, which checks:
 - lexicographic combination unranking,
 - CPU aggregate correctness,
 - benchmark result metadata for a tiny custom case.
+
+## Assignment preprocessing tests
+
+Phase 4.3 adds `test_assignment_preprocessing`, which checks:
+
+- custom task/resource/top-K shape parsing,
+- deterministic synthetic problem generation,
+- CPU top-K reference output size and aggregate counts,
+- self-validation of selected resources and costs,
+- benchmark metadata for a tiny custom case.
+
+It also adds `export_assignment_preprocessing_smoke`, which exports a small task/resource problem and verifies that the feasibility/cost/top-K visualization data path remains wired into the build.
+
+
+## Local-search move tests
+
+Phase 4.4 adds `test_local_search_moves`, which checks:
+
+- deterministic local-search task/resource/move generation,
+- CPU reference evaluation of candidate replacement moves,
+- aggregate counts for valid, invalid, and improving moves,
+- self-validation of move deltas and violation masks,
+- benchmark metadata for a tiny custom case.
+
+It also adds `export_local_search_moves_smoke`, which exports a small current-assignment/move problem and verifies that the local-search problem visualization data path is wired into the build.
+
+
+## Scenario simulation tests
+
+Phase 4.5 adds:
+
+- `test_scenario_simulation`
+- `export_scenario_simulation_smoke`
+
+These verify the CPU reference evaluator, aggregation/validation metadata, registry integration, and the scenario problem exporter.
+
+
+## Scenario simulation sweep runtime note
+
+The scenario-simulation default runner stops at `sc_4m`; `sc_16m` was removed from the normal flow because it was too slow for the value it added. This does not affect CTest coverage.
+
+
+## Scenario simulation calibration test note
+
+The scenario simulation tests continue to validate CPU-side agreement. The calibrated generator is designed so analysis reports can detect degenerate all-feasible or all-infeasible sweeps.

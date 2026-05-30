@@ -114,6 +114,12 @@ set(GPUALGOBENCH_COMMON_SOURCES
     src/constraints/constraint_network_cpu.cpp
     src/combinations/combination_finder_common.cpp
     src/combinations/combination_finder_cpu.cpp
+    src/assignment/assignment_preprocessing_common.cpp
+    src/assignment/assignment_preprocessing_cpu.cpp
+    src/local_search/local_search_moves_common.cpp
+    src/local_search/local_search_moves_cpu.cpp
+    src/scenario/scenario_simulation_common.cpp
+    src/scenario/scenario_simulation_cpu.cpp
 )
 
 if(GPUALGOBENCH_HAS_CUDA)
@@ -127,6 +133,9 @@ if(GPUALGOBENCH_HAS_CUDA)
         src/graph/graph_weighted_relaxation_gpu.cu
         src/constraints/constraint_network_gpu.cu
         src/combinations/combination_finder_gpu.cu
+        src/assignment/assignment_preprocessing_gpu.cu
+        src/local_search/local_search_moves_gpu.cu
+        src/scenario/scenario_simulation_gpu.cu
     )
 endif()
 
@@ -292,6 +301,35 @@ target_link_libraries(export_constraint_network
         gpu_algobench_common
 )
 
+add_executable(export_assignment_preprocessing
+    apps/export_assignment_preprocessing.cpp
+)
+
+target_link_libraries(export_assignment_preprocessing
+    PRIVATE
+        gpu_algobench_common
+)
+
+
+add_executable(export_local_search_moves
+    apps/export_local_search_moves.cpp
+)
+
+target_link_libraries(export_local_search_moves
+    PRIVATE
+        gpu_algobench_common
+)
+
+
+add_executable(export_scenario_simulation
+    apps/export_scenario_simulation.cpp
+)
+
+target_link_libraries(export_scenario_simulation
+    PRIVATE
+        gpu_algobench_common
+)
+
 # ============================================================
 # Tests
 # ============================================================
@@ -330,6 +368,9 @@ if(BUILD_TESTS)
     add_algobench_test(test_graph_weighted_relaxation tests/test_graph_weighted_relaxation.cpp)
     add_algobench_test(test_constraint_network tests/test_constraint_network.cpp)
     add_algobench_test(test_combination_finder tests/test_combination_finder.cpp)
+    add_algobench_test(test_assignment_preprocessing tests/test_assignment_preprocessing.cpp)
+    add_algobench_test(test_local_search_moves tests/test_local_search_moves.cpp)
+    add_algobench_test(test_scenario_simulation tests/test_scenario_simulation.cpp)
 
     add_test(
         NAME export_cost_matrix_smoke
@@ -380,6 +421,35 @@ if(BUILD_TESTS)
             --output-dir ${CMAKE_CURRENT_BINARY_DIR}/export_constraint_network_smoke
     )
 
+    add_test(
+        NAME export_assignment_preprocessing_smoke
+        COMMAND export_assignment_preprocessing
+            --tasks 6
+            --resources 5
+            --top-k 3
+            --output-dir ${CMAKE_CURRENT_BINARY_DIR}/export_assignment_preprocessing_smoke
+    )
+
+
+    add_test(
+        NAME export_local_search_moves_smoke
+        COMMAND export_local_search_moves
+            --tasks 6
+            --resources 5
+            --moves 32
+            --output-dir ${CMAKE_CURRENT_BINARY_DIR}/export_local_search_moves_smoke
+    )
+
+
+    add_test(
+        NAME export_scenario_simulation_smoke
+        COMMAND export_scenario_simulation
+            --tasks 6
+            --resources 5
+            --scenarios 64
+            --output-dir ${CMAKE_CURRENT_BINARY_DIR}/export_scenario_simulation_smoke
+    )
+
     add_algobench_test(test_registry tests/test_registry.cpp)
     add_algobench_test(test_cli tests/test_cli.cpp)
     add_algobench_test(test_json_writer tests/test_json_writer.cpp)
@@ -426,6 +496,43 @@ configure_file(
 configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/execute_combination_finder_all_sweeps_and_analyze.bat
     ${CMAKE_CURRENT_BINARY_DIR}/execute_combination_finder_all_sweeps_and_analyze.bat
+    COPYONLY
+)
+
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/execute_assignment_preprocessing_all_sweeps_and_analyze.bat
+    ${CMAKE_CURRENT_BINARY_DIR}/execute_assignment_preprocessing_all_sweeps_and_analyze.bat
+    COPYONLY
+)
+
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/execute_assignment_preprocessing_plots.bat
+    ${CMAKE_CURRENT_BINARY_DIR}/execute_assignment_preprocessing_plots.bat
+    COPYONLY
+)
+
+
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/execute_local_search_moves_all_sweeps_and_analyze.bat
+    ${CMAKE_CURRENT_BINARY_DIR}/execute_local_search_moves_all_sweeps_and_analyze.bat
+    COPYONLY
+)
+
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/execute_local_search_moves_plots.bat
+    ${CMAKE_CURRENT_BINARY_DIR}/execute_local_search_moves_plots.bat
+    COPYONLY
+)
+
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/execute_scenario_simulation_all_sweeps_and_analyze.bat
+    ${CMAKE_CURRENT_BINARY_DIR}/execute_scenario_simulation_all_sweeps_and_analyze.bat
+    COPYONLY
+)
+
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/execute_scenario_simulation_plots.bat
+    ${CMAKE_CURRENT_BINARY_DIR}/execute_scenario_simulation_plots.bat
     COPYONLY
 )
 

@@ -231,18 +231,41 @@ The GPU can evaluate many combinations independently, but the output must be con
 - Brute-force / exhaustive search: https://en.wikipedia.org/wiki/Brute-force_search
 - Backtracking: https://en.wikipedia.org/wiki/Backtracking
 
+
+## Assignment preprocessing / top-K candidate reduction
+
+### Problem definition
+
+The classical assignment problem assigns agents to tasks with a cost for each pairing. In matrix form, the cost matrix entry represents the cost of assigning one worker/resource to one job/task. Algorithms such as the Hungarian algorithm solve a global assignment objective over that matrix.
+
+The repository's `assignment_preprocessing` benchmark focuses on a step that often comes before the final solver: evaluate a large task/resource feasibility-cost matrix, discard infeasible pairings, and retain only the top-K feasible resources per task.
+
+The plotting-only workflow (`execute_assignment_preprocessing_plots.bat`) is not a separate mathematical problem; it is an inspection layer for the same assignment-preprocessing model. It regenerates the timing figures and the small problem-definition visualizations showing feasibility, cost, and top-K candidate reduction.
+
+### Repository benchmark
+
+- `assignment_preprocessing`
+- Docs: `docs/assignment_preprocessing.md`, `docs/phase_04_assignment_preprocessing.md`
+
+### GPU lesson
+
+This is a strong practical GPU candidate because task/resource pair scoring is dense and independent. The important output-reduction idea is to avoid copying or solving the full dense matrix when a smaller sparse top-K candidate graph is enough for downstream assignment logic.
+
+### References
+
+- Assignment problem: https://en.wikipedia.org/wiki/Assignment_problem
+- Hungarian algorithm: https://en.wikipedia.org/wiki/Hungarian_algorithm
+- Hungarian algorithm, CP-Algorithms: https://cp-algorithms.com/graph/hungarian-algorithm.html
+- Top-k selection overview: https://en.wikipedia.org/wiki/Selection_algorithm
+- CUDA C++ Programming Guide: https://docs.nvidia.com/cuda/cuda-programming-guide/index.html
+
 ## Planned / roadmap topics
 
 These topics were part of the original roadmap and are useful for the lecture even if not all are fully implemented yet.
 
 ### Assignment preprocessing
 
-Problem: build a large cost matrix, filter top-K feasible candidates per task, then solve or approximate the final assignment.
-
-References:
-
-- Assignment problem: https://en.wikipedia.org/wiki/Assignment_problem
-- Hungarian algorithm: https://en.wikipedia.org/wiki/Hungarian_algorithm
+Status: implemented in `assignment_preprocessing`. The full solver remains downstream/roadmap work, but the dense feasibility/cost/top-K preprocessing stage is now covered.
 
 ### Local-search optimization
 
@@ -270,3 +293,36 @@ The references support the same conclusion as the benchmark results:
 3. Strong CPU baselines such as Union-Find and Dijkstra can beat simple GPU adaptations.
 4. GPU graph wins usually require algorithms designed for the hardware, not merely ported loops.
 5. Candidate scoring, validation, enumeration, and simulation are often better practical GPU entry points for classical algorithm teams.
+
+
+## Local-search move evaluation
+
+Local search is a family of heuristic optimization methods that move from one candidate solution to a neighboring candidate solution by applying local changes. This benchmark models the neighborhood-evaluation stage: many possible moves are scored independently, then a solver can choose which move to apply.
+
+Related references:
+
+- Local search in optimization: https://en.wikipedia.org/wiki/Local_search_(optimization)
+- 2-opt as a classic local-search move for route/TSP-style problems: https://en.wikipedia.org/wiki/2-opt
+- CUDA programming model: https://docs.nvidia.com/cuda/cuda-programming-guide/index.html
+
+In this project, `local_search_moves` does not implement a full metaheuristic. It focuses on the GPU-friendly inner loop: evaluating a large neighborhood of independent candidate moves.
+
+
+## Local-search plotting-only note
+
+The plotting-only workflow (`execute_local_search_moves_plots.bat`) is not a separate mathematical problem; it is an inspection layer for the same local-search move-evaluation model. It regenerates the timing figures and the small problem-definition visualizations showing the current assignment, candidate moves, and move-delta distribution.
+
+
+## Local-search speedup plateau note
+
+The local-search speedup plateau is a performance-observation note rather than a new mathematical problem definition. It follows from the benchmark shape: a fixed amount of work per independent move, GPU launch/copy/reduction overhead at small sizes, and steady GPU throughput at large sizes. It belongs with the local-search / neighborhood-evaluation discussion.
+
+
+## Scenario-simulation sweep-size note
+
+The scenario-simulation benchmark is a Monte-Carlo/what-if evaluation style workload. The implementation keeps the default sweep practical: it stops at `sc_4m`, and the old `sc_16m` stress point was removed. This does not change the problem definition or literature references; it only keeps the generated experiment suitable for normal lecture/demo execution.
+
+
+## Scenario feasibility calibration note
+
+The scenario-simulation benchmark uses Monte Carlo-style scenario evaluation as an educational robust-planning workload. The `correct` field is an implementation-validation field: it checks CPU/GPU agreement. It should not be confused with robust feasibility or solution quality. Robustness is represented by feasible ratio, violation counts, score distribution, and robustness score.

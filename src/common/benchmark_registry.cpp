@@ -8,6 +8,9 @@
 #include "graph/graph_weighted_relaxation.hpp"
 #include "constraints/constraint_network.hpp"
 #include "combinations/combination_finder.hpp"
+#include "assignment/assignment_preprocessing.hpp"
+#include "local_search/local_search_moves.hpp"
+#include "scenario/scenario_simulation.hpp"
 
 #include <algorithm>
 #include <stdexcept>
@@ -278,6 +281,86 @@ BenchmarkRegistry make_default_registry()
             if (config.include_gpu)
             {
                 auto gpu_results = combinations::run_combination_finder_gpu(config);
+                results.insert(results.end(), gpu_results.begin(), gpu_results.end());
+            }
+#else
+            (void)config;
+#endif
+
+            return results;
+        });
+
+
+
+    registry.add(
+        BenchmarkInfo{
+            "assignment_preprocessing",
+            "GPU-assisted assignment preprocessing: dense task/resource feasibility and top-K candidate reduction.",
+            {"tiny", "small", "medium", "large"}},
+        [](const BenchmarkConfig& config) {
+            std::vector<BenchmarkResult> results;
+
+            auto cpu_results = assignment::run_assignment_preprocessing_cpu(config);
+            results.insert(results.end(), cpu_results.begin(), cpu_results.end());
+
+#if GPUALGOBENCH_ENABLE_CUDA
+            if (config.include_gpu)
+            {
+                auto gpu_results = assignment::run_assignment_preprocessing_gpu(config);
+                results.insert(results.end(), gpu_results.begin(), gpu_results.end());
+            }
+#else
+            (void)config;
+#endif
+
+            return results;
+        });
+
+
+
+
+    registry.add(
+        BenchmarkInfo{
+            "local_search_moves",
+            "Local-search neighborhood evaluation: CPU move scoring versus GPU one-thread-per-move scoring.",
+            {"tiny", "small", "medium", "large"}},
+        [](const BenchmarkConfig& config) {
+            std::vector<BenchmarkResult> results;
+
+            auto cpu_results = local_search::run_local_search_moves_cpu(config);
+            results.insert(results.end(), cpu_results.begin(), cpu_results.end());
+
+#if GPUALGOBENCH_ENABLE_CUDA
+            if (config.include_gpu)
+            {
+                auto gpu_results = local_search::run_local_search_moves_gpu(config);
+                results.insert(results.end(), gpu_results.begin(), gpu_results.end());
+            }
+#else
+            (void)config;
+#endif
+
+            return results;
+        });
+
+
+
+
+    registry.add(
+        BenchmarkInfo{
+            "scenario_simulation",
+            "Robust-planning scenario simulation: evaluate one plan under many independent uncertainty cases.",
+            {"tiny", "small", "medium", "large"}},
+        [](const BenchmarkConfig& config) {
+            std::vector<BenchmarkResult> results;
+
+            auto cpu_results = scenario::run_scenario_simulation_cpu(config);
+            results.insert(results.end(), cpu_results.begin(), cpu_results.end());
+
+#if GPUALGOBENCH_ENABLE_CUDA
+            if (config.include_gpu)
+            {
+                auto gpu_results = scenario::run_scenario_simulation_gpu(config);
                 results.insert(results.end(), gpu_results.begin(), gpu_results.end());
             }
 #else
