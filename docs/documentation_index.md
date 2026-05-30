@@ -243,3 +243,31 @@ The default scenario-simulation sweep stops at `sc_4m`; `sc_16m` was removed bec
 
 
 - Scenario feasibility calibration: `phase_04_scenario_simulation_feasibility_calibration.md` - explains `correct` versus robust-plan quality and the mixed feasible/infeasible calibration.
+
+
+Scenario simulation feasibility calibration v2: see `docs/phase_04_scenario_simulation_feasibility_calibration_v2.md`.
+
+
+## Final lecture/report package
+
+Use these files when presenting or preparing the final internal lecture:
+
+| File | Purpose |
+|---|---|
+| `lecture_packaging.md` | Lecture flow, narrative, and recommended demo sequence. |
+| `live_demo_script.md` | What to run and what to say during the live demo. |
+| `lecture_command_cheatsheet.md` | Compact command list for live usage. |
+| `final_benchmark_conclusions.md` | Final conclusions across all workload families. |
+| `gpu_decision_guide.md` | CPU vs GPU vs hybrid decision checklist. |
+| `final_report_outline.md` | Outline for a written internal report. |
+
+Canonical short demo command:
+
+```bat
+execute_lecture_demo_core.bat
+```
+
+
+## Lecture demo runner fix
+
+If `execute_lecture_demo_core.bat` prints usage/help for every benchmark instead of running them, see `docs/lecture_demo_runner_fix.md`. The fixed runner passes benchmark arguments as a quoted command fragment and echoes each command before execution.

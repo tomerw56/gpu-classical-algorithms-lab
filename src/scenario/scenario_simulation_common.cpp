@@ -86,17 +86,16 @@ ScenarioProblem make_scenario_problem(const ScenarioShape& shape)
         auto& task = problem.tasks[static_cast<std::size_t>(t)];
         task.x = static_cast<float>((t * 37 + 11) % 2048) * 0.35f;
         task.y = static_cast<float>((t * 59 + 23) % 2048) * 0.35f;
-        task.demand = 1 + (t % 5);
+        task.demand = 1 + (t % 4);
         task.base_cost = 80.0f + static_cast<float>((t * 17) % 180);
         task.priority = 1.0f + static_cast<float>((t * 13) % 100) / 30.0f;
 
-        // Keep the base plan plausible. Earlier versions used risk/latest-finish
-        // values that made every scenario infeasible, which was fine for CPU/GPU
-        // agreement testing but poor for a robust-planning demo. The calibrated
-        // values below allow mild scenarios to pass while still leaving room for
-        // failures, spikes, high-risk, and high-delay scenarios to break the plan.
-        task.risk = 0.04f + static_cast<float>((t * 29 + 7) % 80) / 500.0f;
-        task.latest_finish = 80.0f + static_cast<float>((t * 19) % 90);
+        // Keep the base plan plausible. The point of this benchmark is not to
+        // prove that the generated plan is always good; it is to evaluate the
+        // same plan across many possible worlds. Therefore the base case should
+        // mostly pass mild scenarios but fail meaningful stress scenarios.
+        task.risk = 0.035f + static_cast<float>((t * 29 + 7) % 70) / 650.0f;
+        task.latest_finish = 120.0f + static_cast<float>((t * 19) % 90);
     }
 
     for (std::int32_t r = 0; r < shape.resource_count; ++r)
@@ -104,10 +103,10 @@ ScenarioProblem make_scenario_problem(const ScenarioShape& shape)
         auto& resource = problem.resources[static_cast<std::size_t>(r)];
         resource.x = static_cast<float>((r * 43 + 5) % 2048) * 0.35f;
         resource.y = static_cast<float>((r * 71 + 17) % 2048) * 0.35f;
-        resource.capacity = 4 + (r % 9);
-        resource.speed = 4.0f + static_cast<float>((r * 11) % 55) / 10.0f;
-        resource.reliability = 0.72f + static_cast<float>((r * 23) % 28) / 100.0f;
-        resource.risk_tolerance = 0.45f + static_cast<float>((r * 31) % 70) / 100.0f;
+        resource.capacity = 7 + (r % 8);
+        resource.speed = 7.0f + static_cast<float>((r * 11) % 55) / 10.0f;
+        resource.reliability = 0.84f + static_cast<float>((r * 23) % 15) / 100.0f;
+        resource.risk_tolerance = 0.28f + static_cast<float>((r * 31) % 55) / 100.0f;
         resource.fixed_cost = 20.0f + static_cast<float>((r * 7) % 75);
     }
 
@@ -122,8 +121,8 @@ ScenarioProblem make_scenario_problem(const ScenarioShape& shape)
         for (std::int32_t r = 0; r < shape.resource_count; ++r)
         {
             const auto& resource = problem.resources[static_cast<std::size_t>(r)];
-            const bool capacity_ok = resource.capacity >= task.demand + 1;
-            const bool risk_ok = resource.risk_tolerance >= task.risk * 1.35f;
+            const bool capacity_ok = resource.capacity >= task.demand + 3;
+            const bool risk_ok = resource.risk_tolerance >= task.risk * 1.40f;
             const float d2 = scenario_squared_distance(task.x, task.y, resource.x, resource.y);
             float candidate_score = d2 + 15.0f * resource.fixed_cost;
             if (!capacity_ok) candidate_score += 1000000.0f;
@@ -139,7 +138,7 @@ ScenarioProblem make_scenario_problem(const ScenarioShape& shape)
         const auto& resource = problem.resources[static_cast<std::size_t>(best_resource)];
         const float d2 = scenario_squared_distance(task.x, task.y, resource.x, resource.y);
         const float base_travel = std::sqrt(d2 + 1.0f) / (resource.speed + 1.0e-3f);
-        problem.tasks[static_cast<std::size_t>(t)].latest_finish = std::max(task.latest_finish, 20.0f + 1.65f * base_travel);
+        problem.tasks[static_cast<std::size_t>(t)].latest_finish = std::max(task.latest_finish, 25.0f + 1.45f * base_travel);
     }
 
     for (std::int64_t s = 0; s < shape.scenario_count; ++s)
@@ -151,9 +150,17 @@ ScenarioProblem make_scenario_problem(const ScenarioShape& shape)
         scenario.demand_spike_task = ((s * 19 + 7) % 29 == 0)
             ? static_cast<std::int32_t>((s * 11 + 1) % shape.task_count)
             : -1;
-        scenario.delay_multiplier = 0.80f + static_cast<float>((s * 37 + 11) % 80) / 70.0f;
+        scenario.delay_multiplier = 0.75f + static_cast<float>((s * 37 + 11) % 60) / 100.0f;
+        if ((s * 47 + 3) % 17 == 0)
+        {
+            scenario.delay_multiplier += 0.65f;
+        }
         scenario.cost_multiplier = 0.90f + static_cast<float>((s * 41 + 13) % 55) / 100.0f;
-        scenario.risk_multiplier = 0.75f + static_cast<float>((s * 53 + 17) % 80) / 90.0f;
+        scenario.risk_multiplier = 0.75f + static_cast<float>((s * 53 + 17) % 60) / 100.0f;
+        if ((s * 31 + 5) % 19 == 0)
+        {
+            scenario.risk_multiplier += 0.55f;
+        }
         scenario.weather_penalty = static_cast<float>((s * 61 + 19) % 100) / 100.0f;
     }
 

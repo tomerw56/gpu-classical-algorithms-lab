@@ -914,3 +914,39 @@ The phase docs are:
 ### Scenario simulation calibration note
 
 `docs/phase_04_scenario_simulation_feasibility_calibration.md` explains that scenario `correct=yes` means CPU/GPU agreement, not that the plan is feasible. The calibrated scenario generator now aims to produce a mix of feasible and infeasible scenarios for better robust-planning interpretation.
+
+
+Scenario simulation feasibility calibration v2: see `docs/phase_04_scenario_simulation_feasibility_calibration_v2.md`.
+
+
+## Final lecture package
+
+The repo now includes a lecture-ready documentation layer:
+
+- `docs/lecture_packaging.md` - recommended lecture flow and narrative.
+- `docs/live_demo_script.md` - what to run and what to say during the demo.
+- `docs/lecture_command_cheatsheet.md` - command summary.
+- `docs/final_benchmark_conclusions.md` - final conclusions by workload family.
+- `docs/gpu_decision_guide.md` - CPU vs GPU vs hybrid decision guide.
+- `docs/final_report_outline.md` - outline for a written internal report.
+
+For a short curated demo run:
+
+```bat
+configure_ninja_cuda128.bat
+execute_lecture_demo_core.bat
+```
+
+For the source-of-record documentation start with:
+
+```text
+docs/documentation_index.md
+docs/literature_and_problem_definitions.md
+docs/final_benchmark_conclusions.md
+docs/gpu_decision_guide.md
+```
+
+
+## Lecture demo runner fix
+
+If `execute_lecture_demo_core.bat` prints usage/help for every benchmark instead of running them, see `docs/lecture_demo_runner_fix.md`. The fixed runner passes benchmark arguments as a quoted command fragment and echoes each command before execution.

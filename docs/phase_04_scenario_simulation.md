@@ -88,3 +88,6 @@ set "INCLUDE_HEAVY_CASES=1"
 ## Feasibility calibration and correctness semantics
 
 See `docs/phase_04_scenario_simulation_feasibility_calibration.md`. The `correct` field means CPU/GPU agreement, not plan quality. Robustness quality is read from `feasible_ratio`, violation counts, score summaries, and robustness score.
+
+
+Scenario simulation feasibility calibration v2: see `docs/phase_04_scenario_simulation_feasibility_calibration_v2.md`.

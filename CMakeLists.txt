@@ -536,6 +536,12 @@ configure_file(
     COPYONLY
 )
 
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/execute_lecture_demo_core.bat
+    ${CMAKE_CURRENT_BINARY_DIR}/execute_lecture_demo_core.bat
+    COPYONLY
+)
+
 # ============================================================
 # Summary
 # ============================================================

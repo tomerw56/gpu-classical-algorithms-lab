@@ -157,3 +157,6 @@ The scenario-simulation default runner stops at `sc_4m`; `sc_16m` was removed fr
 ## Scenario simulation calibration test note
 
 The scenario simulation tests continue to validate CPU-side agreement. The calibrated generator is designed so analysis reports can detect degenerate all-feasible or all-infeasible sweeps.
+
+
+Scenario simulation feasibility calibration v2: see `docs/phase_04_scenario_simulation_feasibility_calibration_v2.md`.

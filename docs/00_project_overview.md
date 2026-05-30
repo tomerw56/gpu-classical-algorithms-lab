@@ -260,3 +260,17 @@ Adds `local_search_moves`, a GPU-assisted neighborhood-scoring benchmark for opt
 Phase 4.5 adds `scenario_simulation`, a robust-planning workload that evaluates one fixed assignment plan under many independent uncertainty scenarios. It includes CPU/GPU implementations, `execute_scenario_simulation_all_sweeps_and_analyze.bat`, `execute_scenario_simulation_plots.bat`, analysis scripts, scaling plots, and a small problem exporter/plotter.
 
 This phase is intended as a positive optimization-support example: GPU acceleration is useful when many independent possible worlds must be evaluated for the same plan.
+
+
+## Final packaging
+
+The final lecture/report layer is organized around:
+
+- `docs/lecture_packaging.md`
+- `docs/live_demo_script.md`
+- `docs/lecture_command_cheatsheet.md`
+- `docs/final_benchmark_conclusions.md`
+- `docs/gpu_decision_guide.md`
+- `docs/final_report_outline.md`
+
+A short curated demo is available through `execute_lecture_demo_core.bat`. Full evidence remains in the phase-specific sweep/analyze/plot runners.

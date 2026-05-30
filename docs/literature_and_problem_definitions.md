@@ -326,3 +326,11 @@ The scenario-simulation benchmark is a Monte-Carlo/what-if evaluation style work
 ## Scenario feasibility calibration note
 
 The scenario-simulation benchmark uses Monte Carlo-style scenario evaluation as an educational robust-planning workload. The `correct` field is an implementation-validation field: it checks CPU/GPU agreement. It should not be confused with robust feasibility or solution quality. Robustness is represented by feasible ratio, violation counts, score distribution, and robustness score.
+
+
+Scenario simulation feasibility calibration v2: see `docs/phase_04_scenario_simulation_feasibility_calibration_v2.md`.
+
+
+## Final lecture-package note
+
+The final lecture package does not introduce a new mathematical problem. It organizes the problem definitions already covered in this file into a teaching sequence: dense data-parallel examples, graph counterexamples, and optimization-support workloads. Use `docs/lecture_packaging.md`, `docs/final_benchmark_conclusions.md`, and `docs/gpu_decision_guide.md` together with this literature appendix.
